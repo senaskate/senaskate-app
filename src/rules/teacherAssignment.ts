@@ -1,4 +1,4 @@
-import type { TeacherId, Location } from '../types'
+import type { TeacherId } from '../types'
 import type { Teacher } from '../types'
 
 // 장소 → 선생님 자동배정

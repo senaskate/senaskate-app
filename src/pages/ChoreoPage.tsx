@@ -59,7 +59,6 @@ export default function ChoreoPage() {
           filtered.map(c => {
             const teacher = teachers.find(t => t.id === c.teacherId)
             const ended = c.sessions.some(s => s.sessionNum === 'end')
-            const lastSession = c.sessions[c.sessions.length - 1]
             return (
               <div key={c.id} className={`border rounded-2xl p-4 ${c.billedMonth ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-200'}`}>
                 <div className="flex items-start justify-between">

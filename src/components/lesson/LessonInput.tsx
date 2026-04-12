@@ -6,7 +6,7 @@ import { generateId, formatKRW } from '../../rules/utils'
 import { getTeacherByLocation } from '../../rules/teacherAssignment'
 import { calcLessonFee, needsSemiConfirm } from '../../rules/pricing'
 import { DEFAULT_PRICES, LOCATIONS, type LessonType, type TeacherId } from '../../types'
-import { X, Plus, Trash2, ChevronDown } from 'lucide-react'
+import { X, Plus, Trash2 } from 'lucide-react'
 
 interface StudentRow {
   name: string

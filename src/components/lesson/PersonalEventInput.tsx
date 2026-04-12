@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db'
 import { useAppStore } from '../../stores/appStore'
 import { generateId } from '../../rules/utils'
@@ -96,7 +95,7 @@ export default function PersonalEventInput() {
                 key={c}
                 onClick={() => setColor(c)}
                 className={`w-8 h-8 rounded-full transition-transform ${color === c ? 'scale-125 ring-2 ring-offset-2' : ''}`}
-                style={{ backgroundColor: c, ringColor: c }}
+                style={{ backgroundColor: c }}
               />
             ))}
           </div>

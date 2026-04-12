@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db'
 import { useAppStore } from '../../stores/appStore'
@@ -17,7 +17,6 @@ export default function ChoreoInput() {
     db.choreos.filter(c => !c.billedMonth).toArray()
   , []) ?? []
 
-  const editId = inputModal.editId
   const prefillDate = inputModal.prefillDate ?? selectedDate
 
   // 모드: 'new' | 'continue'

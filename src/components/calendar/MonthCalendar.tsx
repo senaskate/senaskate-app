@@ -29,10 +29,6 @@ export default function MonthCalendar() {
     db.personalEvents.where('date').between(`${currentMonth}-01`, `${currentMonth}-31`, true, true).toArray()
   , [currentMonth]) ?? []
 
-  const choreos = useLiveQuery(() =>
-    db.choreos.toArray()
-  , []) ?? []
-
   // 날짜별 도트 색상 계산
   const dotMap = useMemo(() => {
     const map: Record<string, string[]> = {}
