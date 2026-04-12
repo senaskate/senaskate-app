@@ -10,7 +10,7 @@ export default function ChoreoPage() {
   const { openInputModal } = useAppStore()
   const [filter, setFilter] = useState<'all' | 'active' | 'billed'>('all')
 
-  const choreos = useLiveQuery(() => db.choreos.orderBy('createdAt').reverse().toArray(), []) ?? []
+  const choreos = useLiveQuery(() => db.choreos.toArray().then(list => list.sort((a, b) => b.createdAt - a.createdAt)), []) ?? []
   const teachers = useLiveQuery(() => db.teachers.toArray(), []) ?? []
 
   const filtered = choreos.filter(c => {
