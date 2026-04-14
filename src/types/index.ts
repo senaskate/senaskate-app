@@ -20,6 +20,7 @@ export interface LessonEntry {
   students: StudentLesson[]
   type: LessonType
   note?: string
+  endTime?: string      // 명시적 종료 시간 (칩 표시용)
   // 전주 전용
   travelFee?: number    // 출장비
   accommodationFee?: number  // 숙소비
@@ -95,7 +96,7 @@ export interface PriceConfig {
 }
 
 // ─── 장소 목록 ────────────────────────────────────────────
-export const LOCATIONS = ['김포', '롯데', '목동', '지하', '지상', '제2', '태릉', '과천', '기타'] as const
+export const LOCATIONS = ['김포', '롯데', '목동', '지하', '지상', '제2', '태릉', '과천', '세종', '공주', '안양', '현진집', '기타'] as const
 export type Location = typeof LOCATIONS[number]
 
 // ─── 안무 레벨 표시명 ─────────────────────────────────────

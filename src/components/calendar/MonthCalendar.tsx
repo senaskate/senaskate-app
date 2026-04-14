@@ -24,19 +24,36 @@ export default function MonthCalendar() {
 
   const teachers = useLiveQuery(() => db.teachers.toArray(), []) ?? []
 
+  // 시간 범위 레이블 ("태릉 10-11반" 형식)
+  function makeTimeRange(startTime: string | undefined, endTime: string | undefined, maxMin: number): string {
+    if (!startTime) return ''
+    const [sh, sm] = startTime.split(':').map(Number)
+    let eh: number, em: number
+    if (endTime) {
+      ;[eh, em] = endTime.split(':').map(Number)
+      if (eh < sh) eh += 24
+    } else {
+      const total = sh * 60 + sm + maxMin
+      eh = Math.floor(total / 60)
+      em = total % 60
+    }
+    const fmt = (h: number, m: number) => m === 30 ? `${h}반` : `${h}`
+    return ` ${fmt(sh, sm)}-${fmt(eh, em)}`
+  }
+
   // 날짜별 이벤트 맵
   const eventMap = useMemo(() => {
     const map: Record<string, { label: string; bgColor: string; textColor: string; id: string }[]> = {}
     for (const l of lessons) {
       if (!map[l.date]) map[l.date] = []
-      const time = l.startTime ? ` ${l.startTime}` : ''
-      const label = `${l.location}${time}`
-      map[l.date].push({ label, bgColor: '#d1fae5', textColor: '#059669', id: l.id })
+      const maxMin = l.students.length > 0 ? Math.max(...l.students.map(s => s.minutes)) : 60
+      const range = makeTimeRange(l.startTime, l.endTime, maxMin)
+      map[l.date].push({ label: `${l.location}${range}`, bgColor: '#d1fae5', textColor: '#059669', id: l.id })
     }
     for (const p of personalEvents) {
       if (!map[p.date]) map[p.date] = []
-      const time = p.allDay ? '' : ` ${p.startTime}`
-      map[p.date].push({ label: `${p.title}${time}`, bgColor: p.color + '30', textColor: p.color, id: p.id })
+      const range = p.allDay ? '' : ` ${p.startTime}`
+      map[p.date].push({ label: `${p.title}${range}`, bgColor: p.color + '30', textColor: p.color, id: p.id })
     }
     return map
   }, [lessons, personalEvents, teachers])
@@ -125,7 +142,7 @@ export default function MonthCalendar() {
                       onClick={() => handleDayTap(cell)}
                       className={`align-top px-0.5 py-0.5 border-r border-gray-100 last:border-0 cursor-pointer select-none
                         ${cell.inMonth ? '' : 'opacity-30'}`}
-                      style={{ minHeight: 90 }}
+                      style={{ minHeight: 80 }}
                     >
                       {/* 날짜 번호 */}
                       <div className="flex justify-center mb-0.5 pt-1">
@@ -143,7 +160,7 @@ export default function MonthCalendar() {
 
                       {/* 이벤트 칩 */}
                       <div className="space-y-0.5 px-0.5">
-                        {events.slice(0, 3).map((ev, ei) => (
+                        {events.map((ev, ei) => (
                           <div
                             key={ei}
                             className="rounded truncate font-medium"
@@ -152,11 +169,6 @@ export default function MonthCalendar() {
                             {ev.label}
                           </div>
                         ))}
-                        {events.length > 3 && (
-                          <div className="text-gray-400 pl-0.5" style={{ fontSize: 9 }}>
-                            +{events.length - 3}
-                          </div>
-                        )}
                       </div>
                     </td>
                   )

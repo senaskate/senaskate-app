@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { seedIfEmpty } from './db/seed'
 import { seedHistoricalData } from './db/historicalSeed'
+import { seedAprilData } from './db/aprilSeed'
 import BottomNav from './components/common/BottomNav'
 import BottomSheet from './components/common/BottomSheet'
 import CalendarPage from './pages/CalendarPage'
@@ -18,7 +19,7 @@ export default function App() {
   const { inputModal, closeInputModal } = useAppStore()
 
   useEffect(() => {
-    seedIfEmpty().then(() => seedHistoricalData())
+    seedIfEmpty().then(() => seedHistoricalData()).then(() => seedAprilData())
   }, [])
 
   return (
