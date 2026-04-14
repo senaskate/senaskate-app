@@ -23,8 +23,10 @@
     max-width: 430px;
     margin: 0 auto;
     background: #ffffff;
-    /* 노치/다이나믹 아일랜드 포함 전체 높이 */
     height: 100dvh;
+    /* 노치/다이나믹 아일랜드 여백 — 여기 한 곳에서만 처리 */
+    padding-top: env(safe-area-inset-top, 0px);
+    box-sizing: border-box;
     position: relative;
     overflow: hidden;
   }
