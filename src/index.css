@@ -16,8 +16,6 @@
     min-height: -webkit-fill-available;
     margin: 0;
     padding: 0;
-  }
-  body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: #f8f9fa;
     color: #1a1a1a;
@@ -30,14 +28,15 @@
     max-width: 430px;
     margin: 0 auto;
     background: #ffffff;
-    /* iOS PWA에서 dvh 초기 렌더 버그 → 100% 상속 */
     height: 100%;
+    /* safe area 상하 모두 여기서만 처리 */
     padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     box-sizing: border-box;
     position: relative;
-    overflow: hidden;
+    /* overflow:hidden 제거 — BottomNav safe-area 패딩이 잘리던 원인 */
   }
-  /* iOS 입력 줌 방지 — font-size 16px 강제 */
+  /* iOS 입력 줌 방지 */
   input[type="text"],
   input[type="number"],
   input[type="date"],
