@@ -4,6 +4,7 @@ import { seedHistoricalData } from './db/historicalSeed'
 import { seedAprilData } from './db/aprilSeed'
 import BottomNav from './components/common/BottomNav'
 import BottomSheet from './components/common/BottomSheet'
+import SplashScreen from './components/common/SplashScreen'
 import CalendarPage from './pages/CalendarPage'
 import StatsPage from './pages/StatsPage'
 import TeacherPage from './pages/TeacherPage'
@@ -23,20 +24,26 @@ export default function App() {
   }, [])
 
   return (
-    <div className="flex flex-col h-dvh">
-      <main className="flex-1 min-h-0 overflow-hidden flex flex-col">
-        {activeTab === 'calendar' && <CalendarPage />}
-        {activeTab === 'stats' && <StatsPage />}
-        {activeTab === 'teacher' && <TeacherPage />}
-        {activeTab === 'choreo' && <ChoreoPage />}
-        {activeTab === 'settings' && <SettingsPage />}
-      </main>
-      <BottomNav active={activeTab} onChange={setActiveTab} />
-      <BottomSheet open={inputModal.open} onClose={closeInputModal}>
-        {inputModal.type === 'lesson' && <LessonInput />}
-        {inputModal.type === 'choreo' && <ChoreoInput />}
-        {inputModal.type === 'personal' && <PersonalEventInput />}
-      </BottomSheet>
-    </div>
+    <>
+      <SplashScreen />
+      <div
+        className="flex flex-col h-dvh"
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+      >
+        <main className="flex-1 min-h-0 overflow-hidden flex flex-col">
+          {activeTab === 'calendar' && <CalendarPage />}
+          {activeTab === 'stats' && <StatsPage />}
+          {activeTab === 'teacher' && <TeacherPage />}
+          {activeTab === 'choreo' && <ChoreoPage />}
+          {activeTab === 'settings' && <SettingsPage />}
+        </main>
+        <BottomNav active={activeTab} onChange={setActiveTab} />
+        <BottomSheet open={inputModal.open} onClose={closeInputModal}>
+          {inputModal.type === 'lesson' && <LessonInput />}
+          {inputModal.type === 'choreo' && <ChoreoInput />}
+          {inputModal.type === 'personal' && <PersonalEventInput />}
+        </BottomSheet>
+      </div>
+    </>
   )
 }

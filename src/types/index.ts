@@ -67,7 +67,8 @@ export interface ChoreoSession {
 // ─── 개인 일정 ────────────────────────────────────────────
 export interface PersonalEvent {
   id: string
-  date: string          // YYYY-MM-DD
+  date: string          // YYYY-MM-DD (시작일)
+  endDate?: string      // YYYY-MM-DD (종료일, 다중일 일정)
   startTime: string     // HH:mm
   endTime: string       // HH:mm
   title: string

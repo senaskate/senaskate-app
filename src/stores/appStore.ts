@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { toYYYYMM } from '../rules/utils'
+import { toYYYYMM, localDateStr } from '../rules/utils'
 
 interface AppState {
   // 현재 선택된 날짜 / 월
@@ -24,7 +24,7 @@ interface AppState {
 }
 
 const today = toYYYYMM(new Date())
-const todayStr = new Date().toISOString().split('T')[0]
+const todayStr = localDateStr()
 
 export const useAppStore = create<AppState>((set) => ({
   selectedDate: todayStr,

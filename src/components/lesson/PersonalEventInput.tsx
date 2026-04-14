@@ -12,24 +12,28 @@ export default function PersonalEventInput() {
   const prefillDate = inputModal.prefillDate ?? selectedDate
 
   const [date, setDate] = useState(prefillDate)
+  const [endDate, setEndDate] = useState(prefillDate)
   const [title, setTitle] = useState('')
   const [startTime, setStartTime] = useState('09:00')
   const [endTime, setEndTime] = useState('10:00')
   const [color, setColor] = useState('#3b82f6')
   const [note, setNote] = useState('')
   const [allDay, setAllDay] = useState(false)
+  const [multiDay, setMultiDay] = useState(false)
 
   useEffect(() => {
     if (editId) {
       db.personalEvents.get(editId).then(e => {
         if (!e) return
         setDate(e.date)
+        setEndDate(e.endDate ?? e.date)
         setTitle(e.title)
         setStartTime(e.startTime)
         setEndTime(e.endTime)
         setColor(e.color)
         setNote(e.note ?? '')
         setAllDay(e.allDay ?? false)
+        setMultiDay(!!e.endDate && e.endDate !== e.date)
       })
     }
   }, [editId])
@@ -39,6 +43,7 @@ export default function PersonalEventInput() {
     const event = {
       id: editId ?? generateId(),
       date,
+      endDate: multiDay && endDate > date ? endDate : undefined,
       title: title.trim(),
       startTime,
       endTime,
@@ -102,29 +107,57 @@ export default function PersonalEventInput() {
         </div>
 
         {/* 날짜 */}
-        <div>
-          <label className="text-xs text-gray-400 font-medium mb-1 block">날짜</label>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs text-gray-400 font-medium">
+              {multiDay ? '시작일' : '날짜'}
+            </label>
+            {/* 여러 날 토글 */}
+            <label className="flex items-center gap-2 cursor-pointer">
+              <span className="text-xs text-gray-500">여러 날</span>
+              <div
+                onClick={() => { setMultiDay(!multiDay); setAllDay(true) }}
+                className={`w-10 h-5 rounded-full transition-colors relative ${multiDay ? 'bg-blue-500' : 'bg-gray-200'}`}
+              >
+                <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${multiDay ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </div>
+            </label>
+          </div>
           <input
             type="date"
             value={date}
-            onChange={e => setDate(e.target.value)}
+            onChange={e => { setDate(e.target.value); if (!multiDay) setEndDate(e.target.value) }}
             className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400"
           />
+          {multiDay && (
+            <div>
+              <label className="text-xs text-gray-400 font-medium mb-1 block">종료일</label>
+              <input
+                type="date"
+                value={endDate}
+                min={date}
+                onChange={e => setEndDate(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400"
+              />
+            </div>
+          )}
         </div>
 
         {/* 종일 여부 */}
-        <label className="flex items-center gap-3 cursor-pointer">
-          <div
-            onClick={() => setAllDay(!allDay)}
-            className={`w-11 h-6 rounded-full transition-colors relative ${allDay ? 'bg-blue-500' : 'bg-gray-200'}`}
-          >
-            <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${allDay ? 'translate-x-5' : 'translate-x-0.5'}`} />
-          </div>
-          <span className="text-sm text-gray-700">종일</span>
-        </label>
+        {!multiDay && (
+          <label className="flex items-center gap-3 cursor-pointer">
+            <div
+              onClick={() => setAllDay(!allDay)}
+              className={`w-11 h-6 rounded-full transition-colors relative ${allDay ? 'bg-blue-500' : 'bg-gray-200'}`}
+            >
+              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${allDay ? 'translate-x-5' : 'translate-x-0.5'}`} />
+            </div>
+            <span className="text-sm text-gray-700">종일</span>
+          </label>
+        )}
 
         {/* 시간 */}
-        {!allDay && (
+        {!allDay && !multiDay && (
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="text-xs text-gray-400 font-medium mb-1 block">시작</label>
