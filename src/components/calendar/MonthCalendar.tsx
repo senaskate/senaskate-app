@@ -163,8 +163,8 @@ export default function MonthCalendar() {
                         {events.map((ev, ei) => (
                           <div
                             key={ei}
-                            className="rounded truncate font-medium"
-                            style={{ backgroundColor: ev.bgColor, color: ev.textColor, fontSize: 9, padding: '1px 3px', lineHeight: '14px' }}
+                            className="rounded font-medium break-keep"
+                            style={{ backgroundColor: ev.bgColor, color: ev.textColor, fontSize: 9, padding: '1px 3px', lineHeight: '13px', whiteSpace: 'nowrap', overflow: 'hidden' }}
                           >
                             {ev.label}
                           </div>
