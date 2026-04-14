@@ -15,16 +15,16 @@ const TABS = [
 
 export default function BottomNav({ active, onChange }: BottomNavProps) {
   return (
-    <nav className="flex items-center border-t border-gray-100 bg-white pb-safe">
+    <nav className="flex items-center border-t border-gray-100 bg-white" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)' }}>
       {TABS.map(({ id, icon: Icon, label }) => (
         <button
           key={id}
           onClick={() => onChange(id)}
-          className={`flex-1 flex flex-col items-center py-2.5 gap-0.5 transition-colors ${
+          className={`flex-1 flex flex-col items-center pt-2.5 pb-1 gap-1 transition-colors ${
             active === id ? 'text-emerald-500' : 'text-gray-400'
           }`}
         >
-          <Icon size={22} strokeWidth={active === id ? 2.5 : 1.8} />
+          <Icon size={24} strokeWidth={active === id ? 2.5 : 1.8} />
           <span className={`text-xs ${active === id ? 'font-semibold' : 'font-normal'}`}>{label}</span>
         </button>
       ))}

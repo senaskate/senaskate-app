@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db'
 import { useAppStore } from '../../stores/appStore'
 import { DAY_LABELS } from '../../rules/utils'
-import { Plus, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus } from 'lucide-react'
 
 interface TimeBlock {
   id: string

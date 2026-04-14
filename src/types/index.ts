@@ -1,7 +1,5 @@
 // ─── 선생님 ───────────────────────────────────────────────
-export type TeacherId =
-  | 'yoonsun' | 'boram' | 'oh' | 'byun' | 'nahee'
-  | 'ji' | 'eunsun' | 'choi' | 'shin' | 'jeonju'
+export type TeacherId = string
 
 export interface Teacher {
   id: TeacherId
