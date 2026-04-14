@@ -5,8 +5,15 @@
     -webkit-tap-highlight-color: transparent;
     box-sizing: border-box;
   }
-  html, body {
+  html {
     height: 100%;
+    height: -webkit-fill-available;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    height: 100%;
+    min-height: -webkit-fill-available;
     margin: 0;
     padding: 0;
   }
@@ -23,8 +30,8 @@
     max-width: 430px;
     margin: 0 auto;
     background: #ffffff;
-    height: 100dvh;
-    /* 노치/다이나믹 아일랜드 여백 — 여기 한 곳에서만 처리 */
+    /* iOS PWA에서 dvh 초기 렌더 버그 → 100% 상속 */
+    height: 100%;
     padding-top: env(safe-area-inset-top, 0px);
     box-sizing: border-box;
     position: relative;
