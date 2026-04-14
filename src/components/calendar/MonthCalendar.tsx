@@ -26,18 +26,17 @@ export default function MonthCalendar() {
 
   // 날짜별 이벤트 맵
   const eventMap = useMemo(() => {
-    const map: Record<string, { label: string; color: string; id: string }[]> = {}
+    const map: Record<string, { label: string; bgColor: string; textColor: string; id: string }[]> = {}
     for (const l of lessons) {
       if (!map[l.date]) map[l.date] = []
-      const teacher = teachers.find(t => t.id === l.teacherId)
       const time = l.startTime ? ` ${l.startTime}` : ''
       const label = `${l.location}${time}`
-      map[l.date].push({ label, color: teacher?.color ?? '#10b981', id: l.id })
+      map[l.date].push({ label, bgColor: '#d1fae5', textColor: '#059669', id: l.id })
     }
     for (const p of personalEvents) {
       if (!map[p.date]) map[p.date] = []
       const time = p.allDay ? '' : ` ${p.startTime}`
-      map[p.date].push({ label: `${p.title}${time}`, color: p.color, id: p.id })
+      map[p.date].push({ label: `${p.title}${time}`, bgColor: p.color + '30', textColor: p.color, id: p.id })
     }
     return map
   }, [lessons, personalEvents, teachers])
@@ -126,7 +125,7 @@ export default function MonthCalendar() {
                       onClick={() => handleDayTap(cell)}
                       className={`align-top px-0.5 py-0.5 border-r border-gray-100 last:border-0 cursor-pointer select-none
                         ${cell.inMonth ? '' : 'opacity-30'}`}
-                      style={{ minHeight: 72 }}
+                      style={{ minHeight: 90 }}
                     >
                       {/* 날짜 번호 */}
                       <div className="flex justify-center mb-0.5 pt-1">
@@ -147,8 +146,8 @@ export default function MonthCalendar() {
                         {events.slice(0, 3).map((ev, ei) => (
                           <div
                             key={ei}
-                            className="rounded text-white truncate"
-                            style={{ backgroundColor: ev.color, fontSize: 9, padding: '1px 3px', lineHeight: '14px' }}
+                            className="rounded truncate font-medium"
+                            style={{ backgroundColor: ev.bgColor, color: ev.textColor, fontSize: 9, padding: '1px 3px', lineHeight: '14px' }}
                           >
                             {ev.label}
                           </div>
