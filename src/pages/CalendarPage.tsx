@@ -1,52 +1,37 @@
 import { useAppStore } from '../stores/appStore'
 import MonthCalendar from '../components/calendar/MonthCalendar'
 import DayView from '../components/calendar/DayView'
-import BottomSheet from '../components/common/BottomSheet'
-import LessonInput from '../components/lesson/LessonInput'
-import ChoreoInput from '../components/lesson/ChoreoInput'
-import PersonalEventInput from '../components/lesson/PersonalEventInput'
-import { CalendarDays, List } from 'lucide-react'
+import { Plus } from 'lucide-react'
 
 export default function CalendarPage() {
-  const { calendarView, setCalendarView, inputModal, closeInputModal } = useAppStore()
+  const { calendarView, setCalendarView, openInputModal, selectedDate } = useAppStore()
 
   return (
-    <div className="flex flex-col h-full">
-      {/* 상단 뷰 전환 탭 */}
-      <div className="flex items-center justify-end px-4 py-2 border-b border-gray-100">
-        <div className="flex bg-gray-100 rounded-xl p-0.5">
-          <button
-            onClick={() => setCalendarView('month')}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              calendarView === 'month' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500'
-            }`}
-          >
-            <CalendarDays size={14} />
-            월간
-          </button>
-          <button
-            onClick={() => setCalendarView('day')}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              calendarView === 'day' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500'
-            }`}
-          >
-            <List size={14} />
-            일간
-          </button>
-        </div>
-      </div>
-
+    <div className="flex flex-col h-full relative">
       {/* 캘린더 콘텐츠 */}
       <div className="flex-1 overflow-hidden flex flex-col">
         {calendarView === 'month' ? <MonthCalendar /> : <DayView />}
       </div>
 
-      {/* 입력 바텀시트 */}
-      <BottomSheet open={inputModal.open} onClose={closeInputModal}>
-        {inputModal.type === 'lesson' && <LessonInput />}
-        {inputModal.type === 'choreo' && <ChoreoInput />}
-        {inputModal.type === 'personal' && <PersonalEventInput />}
-      </BottomSheet>
+      {/* 월간 → 일간 전환 시 뒤로가기 버튼 (일간 뷰에서만) */}
+      {calendarView === 'day' && (
+        <button
+          onClick={() => setCalendarView('month')}
+          className="absolute top-3 left-3 text-xs text-emerald-600 font-medium bg-emerald-50 px-3 py-1.5 rounded-full z-10"
+        >
+          ← 월간
+        </button>
+      )}
+
+      {/* FAB 버튼 - 월간 뷰에서만 */}
+      {calendarView === 'month' && (
+        <button
+          onClick={() => openInputModal('lesson', selectedDate)}
+          className="absolute bottom-4 right-4 w-14 h-14 bg-emerald-500 text-white rounded-full shadow-lg flex items-center justify-center z-10"
+        >
+          <Plus size={28} />
+        </button>
+      )}
     </div>
   )
 }
