@@ -15,7 +15,7 @@ const TABS = [
 
 export default function BottomNav({ active, onChange }: BottomNavProps) {
   return (
-    <nav className="flex items-center border-t border-gray-100 bg-white" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)' }}>
+    <nav className="flex items-center border-t border-gray-100 bg-white flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)' }}>
       {TABS.map(({ id, icon: Icon, label }) => (
         <button
           key={id}

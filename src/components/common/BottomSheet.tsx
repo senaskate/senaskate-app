@@ -29,12 +29,13 @@ export default function BottomSheet({ open, onClose, children, fullHeight = true
       <div
         ref={sheetRef}
         className={`relative bg-white rounded-t-3xl shadow-2xl flex flex-col ${fullHeight ? 'h-[92dvh]' : 'max-h-[92dvh]'}`}
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         {/* 핸들 */}
-        <div className="flex justify-center pt-3 pb-1">
+        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
           <div className="w-10 h-1 bg-gray-200 rounded-full" />
         </div>
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-hidden flex flex-col min-h-0">
           {children}
         </div>
       </div>

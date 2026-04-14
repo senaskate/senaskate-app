@@ -1,21 +1,11 @@
 @import "tailwindcss";
 
-@utility pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-@utility pt-safe {
-  padding-top: env(safe-area-inset-top, 0px);
-}
-@utility mb-safe {
-  margin-bottom: env(safe-area-inset-bottom, 0px);
-}
-
 @layer base {
   * {
     -webkit-tap-highlight-color: transparent;
     box-sizing: border-box;
   }
-  html, body, #root {
+  html, body {
     height: 100%;
     margin: 0;
     padding: 0;
@@ -33,7 +23,18 @@
     max-width: 430px;
     margin: 0 auto;
     background: #ffffff;
-    min-height: 100dvh;
+    /* 노치/다이나믹 아일랜드 포함 전체 높이 */
+    height: 100dvh;
     position: relative;
+    overflow: hidden;
+  }
+  /* iOS 입력 줌 방지 — font-size 16px 강제 */
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  input[type="time"],
+  select,
+  textarea {
+    font-size: 16px !important;
   }
 }
