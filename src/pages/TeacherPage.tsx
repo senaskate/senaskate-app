@@ -54,9 +54,27 @@ export default function TeacherPage() {
   async function handleDownloadImage() {
     if (!printRef.current) return
     const canvas = await html2canvas(printRef.current, { scale: 2, backgroundColor: '#ffffff' })
+    const dataUrl = canvas.toDataURL('image/png')
+    const filename = `${currentMonth}_${activeTeacher?.name ?? '선생님'}_레슨비.png`
+
+    // iOS: Web Share API로 공유 (카메라롤 저장 가능)
+    if (typeof navigator.share === 'function') {
+      try {
+        const blob = await (await fetch(dataUrl)).blob()
+        const file = new File([blob], filename, { type: 'image/png' })
+        if (navigator.canShare?.({ files: [file] })) {
+          await navigator.share({ files: [file], title: filename })
+          return
+        }
+      } catch (e) {
+        if ((e as Error).name === 'AbortError') return // 사용자가 취소
+      }
+    }
+
+    // 일반 브라우저: 링크 다운로드
     const link = document.createElement('a')
-    link.download = `${currentMonth}_${activeTeacher?.name ?? '선생님'}_레슨비.png`
-    link.href = canvas.toDataURL('image/png')
+    link.download = filename
+    link.href = dataUrl
     link.click()
   }
 

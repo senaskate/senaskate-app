@@ -206,10 +206,11 @@ export default function MonthCalendar() {
                     <td
                       key={cell.date}
                       onClick={() => handleDayTap(cell)}
-                      className={`align-top py-0.5 border-r border-gray-100 last:border-0 cursor-pointer select-none
+                      className={`align-top p-0 border-r border-gray-100 last:border-0 cursor-pointer select-none
                         ${cell.inMonth ? '' : 'opacity-30'}`}
-                      style={{ minHeight: 80 }}
                     >
+                      {/* 셀 높이 고정: 일정 수에 관계없이 항상 80px */}
+                      <div style={{ height: 80, overflow: 'hidden' }} className="py-0.5">
                       {/* 날짜 번호 + 공휴일 */}
                       <div className="flex flex-col items-center mb-0.5 pt-1">
                         <span className={`
@@ -277,6 +278,7 @@ export default function MonthCalendar() {
                           </div>
                         ))}
                       </div>
+                      </div>{/* 고정 높이 div 닫기 */}
                     </td>
                   )
                 })}

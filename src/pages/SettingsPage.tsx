@@ -114,41 +114,67 @@ export default function SettingsPage() {
     })
   }
 
+  async function renderTeacherCanvas(teacher: typeof teachers[0]) {
+    const tLessons = lessons.filter(l => l.teacherId === teacher.id)
+    if (tLessons.length === 0) return null
+    const div = document.createElement('div')
+    div.style.cssText = 'position:fixed;top:-9999px;left:-9999px;background:white;width:400px;padding:20px;font-family:sans-serif;'
+    div.innerHTML = `
+      <h2 style="font-size:16px;font-weight:bold;margin-bottom:12px;color:#1a1a1a">${teacher.name} · ${year}년 ${month}월</h2>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr style="background:#f9fafb">
+          <th style="padding:8px;text-align:left;border-bottom:1px solid #e5e7eb">날짜</th>
+          <th style="padding:8px;text-align:left;border-bottom:1px solid #e5e7eb">장소</th>
+          <th style="padding:8px;text-align:left;border-bottom:1px solid #e5e7eb">이름</th>
+          <th style="padding:8px;text-align:right;border-bottom:1px solid #e5e7eb">분</th>
+          <th style="padding:8px;text-align:right;border-bottom:1px solid #e5e7eb">금액</th>
+        </tr></thead>
+        <tbody>
+          ${tLessons.sort((a, b) => a.date.localeCompare(b.date)).flatMap(l =>
+            l.students.map((s, i) => `<tr style="border-bottom:1px solid #f3f4f6">
+              <td style="padding:6px 8px;color:#6b7280">${i === 0 ? l.date.slice(5).replace('-', '/') : ''}</td>
+              <td style="padding:6px 8px;color:#6b7280">${i === 0 ? l.location : ''}</td>
+              <td style="padding:6px 8px;font-weight:500">${s.name}${s.unpaid ? ' (미납)' : ''}</td>
+              <td style="padding:6px 8px;text-align:right;color:#6b7280">${s.minutes}분</td>
+              <td style="padding:6px 8px;text-align:right;font-weight:600">${(s.fee + (s.offIceFee ?? 0)).toLocaleString()}</td>
+            </tr>`)
+          ).join('')}
+        </tbody>
+      </table>
+    `
+    document.body.appendChild(div)
+    const canvas = await html2canvas(div, { scale: 2, backgroundColor: '#ffffff' })
+    document.body.removeChild(div)
+    return { canvas, name: teacher.name }
+  }
+
   async function handleBulkDownload() {
+    const results = (await Promise.all(teachers.map(t => renderTeacherCanvas(t)))).filter(Boolean) as { canvas: HTMLCanvasElement; name: string }[]
+    if (results.length === 0) return
+
+    // iOS: Web Share API로 모든 이미지 공유
+    if (typeof navigator.share === 'function') {
+      try {
+        const files = await Promise.all(
+          results.map(async ({ canvas, name }) => {
+            const blob = await new Promise<Blob>(res => canvas.toBlob(b => res(b!), 'image/png'))
+            return new File([blob], `${currentMonth}_${name}.png`, { type: 'image/png' })
+          })
+        )
+        if (navigator.canShare?.({ files })) {
+          await navigator.share({ files, title: `${currentMonth} 레슨비` })
+          return
+        }
+      } catch (e) {
+        if ((e as Error).name === 'AbortError') return
+      }
+    }
+
+    // 일반 브라우저: ZIP 다운로드
     const zip = new JSZip()
-    for (const teacher of teachers) {
-      const tLessons = lessons.filter(l => l.teacherId === teacher.id)
-      if (tLessons.length === 0) continue
-      const div = document.createElement('div')
-      div.style.cssText = 'position:fixed;top:-9999px;left:-9999px;background:white;width:400px;padding:20px;font-family:sans-serif;'
-      div.innerHTML = `
-        <h2 style="font-size:16px;font-weight:bold;margin-bottom:12px;color:#1a1a1a">${teacher.name} · ${year}년 ${month}월</h2>
-        <table style="width:100%;border-collapse:collapse;font-size:13px;">
-          <thead><tr style="background:#f9fafb">
-            <th style="padding:8px;text-align:left;border-bottom:1px solid #e5e7eb">날짜</th>
-            <th style="padding:8px;text-align:left;border-bottom:1px solid #e5e7eb">장소</th>
-            <th style="padding:8px;text-align:left;border-bottom:1px solid #e5e7eb">이름</th>
-            <th style="padding:8px;text-align:right;border-bottom:1px solid #e5e7eb">분</th>
-            <th style="padding:8px;text-align:right;border-bottom:1px solid #e5e7eb">금액</th>
-          </tr></thead>
-          <tbody>
-            ${tLessons.sort((a, b) => a.date.localeCompare(b.date)).flatMap(l =>
-              l.students.map((s, i) => `<tr style="border-bottom:1px solid #f3f4f6">
-                <td style="padding:6px 8px;color:#6b7280">${i === 0 ? l.date.slice(5).replace('-', '/') : ''}</td>
-                <td style="padding:6px 8px;color:#6b7280">${i === 0 ? l.location : ''}</td>
-                <td style="padding:6px 8px;font-weight:500">${s.name}${s.unpaid ? ' (미납)' : ''}</td>
-                <td style="padding:6px 8px;text-align:right;color:#6b7280">${s.minutes}분</td>
-                <td style="padding:6px 8px;text-align:right;font-weight:600">${(s.fee + (s.offIceFee ?? 0)).toLocaleString()}</td>
-              </tr>`)
-            ).join('')}
-          </tbody>
-        </table>
-      `
-      document.body.appendChild(div)
-      const canvas = await html2canvas(div, { scale: 2, backgroundColor: '#ffffff' })
-      document.body.removeChild(div)
+    for (const { canvas, name } of results) {
       const blob = await new Promise<Blob>(res => canvas.toBlob(b => res(b!), 'image/png'))
-      zip.file(`${currentMonth}_${teacher.name}.png`, blob)
+      zip.file(`${currentMonth}_${name}.png`, blob)
     }
     const content = await zip.generateAsync({ type: 'blob' })
     const link = document.createElement('a')

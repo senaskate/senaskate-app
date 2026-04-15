@@ -29,9 +29,8 @@
     margin: 0 auto;
     background: #ffffff;
     height: 100%;
-    /* safe area 상하 모두 여기서만 처리 */
+    /* 상단 safe area만 처리. 하단은 BottomNav(fixed)가 처리 */
     padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
     box-sizing: border-box;
     position: relative;
     /* overflow:hidden 제거 — BottomNav safe-area 패딩이 잘리던 원인 */
