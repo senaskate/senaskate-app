@@ -34,9 +34,8 @@
     max-width: 430px;
     margin: 0 auto;
     background: #ffffff;
-    /* safe area 상하 모두 여기서 처리 */
+    /* 상단 safe area만 처리. 하단은 BottomNav에서 처리 */
     padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
     box-sizing: border-box;
   }
   /* iOS 입력 줌 방지 */

@@ -1,4 +1,4 @@
-const CACHE = 'senaskate-v1'
+const CACHE = 'senaskate-v3'
 
 self.addEventListener('install', e => {
   e.waitUntil(
