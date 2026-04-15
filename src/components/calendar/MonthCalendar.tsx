@@ -186,12 +186,13 @@ export default function MonthCalendar() {
         ))}
       </div>
 
-      {/* 날짜 그리드 */}
-      <div className="flex-1 overflow-y-auto">
-        <table className="w-full table-fixed border-collapse">
+      {/* 날짜 그리드: 화면 전체 채우기 */}
+      <div className="flex-1 overflow-hidden">
+        <table className="w-full table-fixed border-collapse" style={{ height: '100%' }}>
           <tbody>
             {weeks.map((week, wi) => (
-              <tr key={wi} className="border-b border-gray-100 last:border-0">
+              // 모든 행이 동일한 높이로 화면을 꽉 채움
+              <tr key={wi} className="border-b border-gray-100 last:border-0" style={{ height: `${100 / weeks.length}%` }}>
                 {week.map((cell, di) => {
                   const isToday    = cell.date === TODAY
                   const isSelected = cell.date === selectedDate && cell.inMonth
@@ -209,8 +210,8 @@ export default function MonthCalendar() {
                       className={`align-top p-0 border-r border-gray-100 last:border-0 cursor-pointer select-none
                         ${cell.inMonth ? '' : 'opacity-30'}`}
                     >
-                      {/* 셀 높이 고정: 일정 수에 관계없이 항상 80px */}
-                      <div style={{ height: 80, overflow: 'hidden' }} className="py-0.5">
+                      {/* 셀 높이 = 행 높이(%), 내용이 넘치면 hidden */}
+                      <div style={{ height: '100%', overflow: 'hidden' }} className="py-0.5">
                       {/* 날짜 번호 + 공휴일 */}
                       <div className="flex flex-col items-center mb-0.5 pt-1">
                         <span className={`
@@ -230,7 +231,7 @@ export default function MonthCalendar() {
                         )}
                       </div>
 
-                      {/* 다중일 이벤트 배너 (셀 전체 너비) */}
+                      {/* 다중일 이벤트 배너 (셀 전체 너비, 텍스트 중앙정렬) */}
                       {multidayChips.length > 0 && (
                         <div className="space-y-0.5 mb-0.5">
                           {multidayChips.map(chip => (
@@ -240,8 +241,9 @@ export default function MonthCalendar() {
                                 backgroundColor: chip.bgColor,
                                 color: chip.textColor,
                                 fontSize: 8,
-                                padding: '1px 3px',
+                                padding: '1px 2px',
                                 lineHeight: '13px',
+                                textAlign: 'center',
                                 borderRadius:
                                   chip.spanPos === 'start' ? '3px 0 0 3px' :
                                   chip.spanPos === 'end'   ? '0 3px 3px 0' :
@@ -257,7 +259,7 @@ export default function MonthCalendar() {
                         </div>
                       )}
 
-                      {/* 일반 이벤트 칩 */}
+                      {/* 일반 이벤트 칩 (텍스트 중앙정렬) */}
                       <div className="space-y-0.5 px-0.5">
                         {regularChips.map((chip) => (
                           <div
@@ -266,8 +268,9 @@ export default function MonthCalendar() {
                               backgroundColor: chip.bgColor,
                               color: chip.textColor,
                               fontSize: 8,
-                              padding: '1px 3px',
+                              padding: '1px 2px',
                               lineHeight: '13px',
+                              textAlign: 'center',
                               borderRadius: 3,
                               overflow: 'hidden',
                               whiteSpace: 'nowrap',
@@ -278,7 +281,7 @@ export default function MonthCalendar() {
                           </div>
                         ))}
                       </div>
-                      </div>{/* 고정 높이 div 닫기 */}
+                      </div>{/* 셀 div 닫기 */}
                     </td>
                   )
                 })}
