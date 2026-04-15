@@ -25,15 +25,19 @@
   #root {
     display: flex;
     flex-direction: column;
+    /* iOS PWA 핵심: fixed로 뷰포트에 완전히 고정 → 고무줄 스크롤 방지 + 탭바 항상 하단 */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     max-width: 430px;
     margin: 0 auto;
     background: #ffffff;
-    height: 100%;
-    /* 상단 safe area만 처리. 하단은 BottomNav(fixed)가 처리 */
+    /* safe area 상하 모두 여기서 처리 */
     padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     box-sizing: border-box;
-    position: relative;
-    /* overflow:hidden 제거 — BottomNav safe-area 패딩이 잘리던 원인 */
   }
   /* iOS 입력 줌 방지 */
   input[type="text"],
