@@ -6,16 +6,16 @@
     box-sizing: border-box;
   }
   html {
-    height: 100%;
-    height: -webkit-fill-available;
+    height: 100dvh;
     margin: 0;
     padding: 0;
+    overflow: hidden;
   }
   body {
-    height: 100%;
-    min-height: -webkit-fill-available;
+    height: 100dvh;
     margin: 0;
     padding: 0;
+    overflow: hidden;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: #f8f9fa;
     color: #1a1a1a;
@@ -25,16 +25,11 @@
   #root {
     display: flex;
     flex-direction: column;
-    /* iOS PWA 핵심: fixed로 뷰포트에 완전히 고정 → 고무줄 스크롤 방지 + 탭바 항상 하단 */
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    height: 100dvh;
+    overflow: hidden;
     max-width: 430px;
     margin: 0 auto;
     background: #ffffff;
-    /* 상단 safe area만 처리. 하단은 BottomNav에서 처리 */
     padding-top: env(safe-area-inset-top, 0px);
     box-sizing: border-box;
   }
