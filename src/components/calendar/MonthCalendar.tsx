@@ -210,8 +210,8 @@ export default function MonthCalendar() {
                       className={`align-top p-0 border-r border-gray-100 last:border-0 cursor-pointer select-none
                         ${cell.inMonth ? '' : 'opacity-30'}`}
                     >
-                      {/* 셀 높이 = 행 높이(%), 내용이 넘치면 hidden */}
-                      <div style={{ height: '100%', overflow: 'hidden' }} className="py-0.5">
+                      {/* 셀 높이 = 행 높이(%) — overflow:hidden 제거해야 neg-margin이 경계선을 덮음 */}
+                      <div style={{ height: '100%' }} className="py-0.5">
                       {/* 날짜 번호 + 공휴일 */}
                       <div className="flex flex-col items-center mb-0.5 pt-1">
                         <span className={`
@@ -231,7 +231,7 @@ export default function MonthCalendar() {
                         )}
                       </div>
 
-                      {/* 다중일 이벤트 배너 — 셀 경계선을 음수 마진으로 덮어 끊김 없이 연결 */}
+                      {/* 다중일 이벤트 배너 — neg-margin으로 border-r 1px 덮어 끊김 없이 연결 */}
                       {multidayChips.length > 0 && (
                         <div className="space-y-0.5 mb-0.5">
                           {multidayChips.map(chip => {
@@ -246,13 +246,11 @@ export default function MonthCalendar() {
                                   color: chip.textColor,
                                   fontSize: 8,
                                   lineHeight: '13px',
-                                  textAlign: 'center',
+                                  textAlign: 'left',
                                   fontWeight: 600,
                                   overflow: 'hidden',
                                   whiteSpace: 'nowrap',
-                                  // 왼쪽 경계선(1px)을 덮어서 끊김 없이 이어붙임
                                   marginLeft:  (isMid || isEnd)   ? -1 : 0,
-                                  // 오른쪽 경계선도 덮어서 다음 셀과 연결
                                   marginRight: (isMid || isStart) ? -1 : 0,
                                   paddingTop: 1,
                                   paddingBottom: 1,
@@ -264,15 +262,16 @@ export default function MonthCalendar() {
                                     isMid   ? 0 : 3,
                                 }}
                               >
-                                {isMid ? '\u00A0' : chip.label}
+                                {/* 시작 날짜만 텍스트 표시, mid/end는 공백으로 색만 채움 */}
+                                {(isMid || isEnd) ? '\u00A0' : chip.label}
                               </div>
                             )
                           })}
                         </div>
                       )}
 
-                      {/* 일반 이벤트 칩 (텍스트 중앙정렬) */}
-                      <div className="space-y-0.5 px-0.5">
+                      {/* 일반 이벤트 칩 — overflow:hidden으로 넘치는 칩 숨김 */}
+                      <div className="space-y-0.5 px-0.5 overflow-hidden">
                         {regularChips.map((chip) => (
                           <div
                             key={chip.id}
