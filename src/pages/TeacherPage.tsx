@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { useAppStore } from '../stores/appStore'
@@ -20,6 +20,7 @@ export default function TeacherPage() {
   , [currentMonth]) ?? []
 
   const printRef = useRef<HTMLDivElement>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   const activeTeacher = teachers.find(t => t.id === activeTeacherId) ?? teachers[0]
 
@@ -51,13 +52,13 @@ export default function TeacherPage() {
     setCurrentMonth(toYYYYMM(d))
   }
 
-  async function handleDownloadImage() {
+  const handleDownloadImage = useCallback(async () => {
     if (!printRef.current) return
     const canvas = await html2canvas(printRef.current, { scale: 2, backgroundColor: '#ffffff' })
     const dataUrl = canvas.toDataURL('image/png')
     const filename = `${currentMonth}_${activeTeacher?.name ?? '선생님'}_레슨비.png`
 
-    // iOS: Web Share API로 공유 (카메라롤 저장 가능) — canShare 체크 없이 바로 시도
+    // Web Share API (iOS/Android) 시도
     if (typeof navigator.share === 'function') {
       try {
         const blob = await (await fetch(dataUrl)).blob()
@@ -65,18 +66,14 @@ export default function TeacherPage() {
         await navigator.share({ files: [file], title: filename })
         return
       } catch (e) {
-        if ((e as Error).name === 'AbortError') return // 사용자가 취소
-        // share 실패 시 fallback으로 내려감
+        if ((e as Error).name === 'AbortError') return
+        // 실패 시 인앱 미리보기로 폴백
       }
     }
 
-    // iOS Safari fallback: 새 탭에서 이미지 열어 길게 눌러 저장
+    // iOS: 팝업이 막히므로 인앱 이미지 미리보기 → 길게 눌러 저장
     if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-      const w = window.open()
-      if (w) {
-        w.document.write(`<img src="${dataUrl}" style="max-width:100%;display:block">`)
-        w.document.title = filename
-      }
+      setPreviewUrl(dataUrl)
       return
     }
 
@@ -85,7 +82,7 @@ export default function TeacherPage() {
     link.download = filename
     link.href = dataUrl
     link.click()
-  }
+  }, [printRef, currentMonth, activeTeacher])
 
   if (!activeTeacher) return null
 
@@ -211,6 +208,31 @@ export default function TeacherPage() {
           이미지로 저장
         </button>
       </div>
+
+      {/* iOS 인앱 이미지 미리보기 — 길게 눌러 저장 */}
+      {previewUrl && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/85 px-4"
+          onClick={() => setPreviewUrl(null)}
+        >
+          <p className="text-white text-sm font-medium mb-3 text-center">
+            이미지를 길게 눌러 저장하세요
+          </p>
+          <img
+            src={previewUrl}
+            alt="레슨비 내역"
+            className="rounded-xl shadow-2xl"
+            style={{ maxWidth: '100%', maxHeight: '72vh', objectFit: 'contain' }}
+            onClick={e => e.stopPropagation()}
+          />
+          <button
+            onClick={() => setPreviewUrl(null)}
+            className="mt-4 text-white/60 text-xs"
+          >
+            닫기
+          </button>
+        </div>
+      )}
     </div>
   )
 }

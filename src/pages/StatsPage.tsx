@@ -48,10 +48,13 @@ export default function StatsPage() {
     .sort((a, b) => a.month.localeCompare(b.month))
     .slice(-6)
 
-  // 연간 총수익
-  const yearTotal = monthCloses
+  // 연간 총수익: 마감된 달 합계 + 현재 선택 달이 미마감이면 계산값 추가
+  const isCurrentMonthClosed = monthCloses.some(c => c.month === currentMonth)
+  const closedYearTotal = monthCloses
     .filter(c => c.month.startsWith(String(year)))
     .reduce((sum, c) => sum + c.grandTotal, 0)
+  const yearTotal = closedYearTotal +
+    (currentMonth.startsWith(String(year)) && !isCurrentMonthClosed ? monthTotal : 0)
 
   return (
     <div className="flex flex-col h-full overflow-y-auto">
@@ -150,8 +153,16 @@ export default function StatsPage() {
 
         {/* 연간 총수익 */}
         <div className="bg-gray-800 rounded-2xl px-5 py-4 text-white">
-          <p className="text-xs opacity-60">{year}년 총 수익</p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs opacity-60">{year}년 총 수익</p>
+            {!isCurrentMonthClosed && currentMonth.startsWith(String(year)) && (
+              <span className="text-xs bg-white/20 rounded-full px-2 py-0.5">집계 중</span>
+            )}
+          </div>
           <p className="text-2xl font-bold mt-1">{formatKRW(yearTotal)}</p>
+          {!isCurrentMonthClosed && currentMonth.startsWith(String(year)) && (
+            <p className="text-xs opacity-50 mt-1">마감된 달 + {month}월 예상 포함</p>
+          )}
         </div>
       </div>
     </div>

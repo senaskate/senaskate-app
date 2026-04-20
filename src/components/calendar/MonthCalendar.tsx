@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db'
 import { useAppStore } from '../../stores/appStore'
@@ -84,8 +84,8 @@ export default function MonthCalendar() {
         map[d].unshift({
           id: p.id + '-' + d,
           label: p.title,
-          bgColor: p.color + '33',
-          textColor: p.color,
+          bgColor: p.color,
+          textColor: '#ffffff',
           isMultiday: true,
           spanPos,
         })
@@ -100,8 +100,8 @@ export default function MonthCalendar() {
       map[l.date].push({
         id: l.id,
         label: `${l.location}${range}`,
-        bgColor: '#d1fae5',
-        textColor: '#059669',
+        bgColor: '#10b981',
+        textColor: '#ffffff',
         isMultiday: false,
         spanPos: 'single',
       })
@@ -116,8 +116,8 @@ export default function MonthCalendar() {
       map[p.date].push({
         id: p.id,
         label: `${p.title}${timeLabel}`,
-        bgColor: p.color + '33',
-        textColor: p.color,
+        bgColor: p.color,
+        textColor: '#ffffff',
         isMultiday: false,
         spanPos: 'single',
       })
@@ -161,6 +161,23 @@ export default function MonthCalendar() {
     setCalendarView('day')
   }
 
+  // 스와이프로 이전/다음 달 이동
+  const touchStartX = useRef(0)
+  const touchStartY = useRef(0)
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX
+    touchStartY.current = e.touches[0].clientY
+  }
+  function handleTouchEnd(e: React.TouchEvent) {
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    const dy = e.changedTouches[0].clientY - touchStartY.current
+    // 가로 이동이 세로보다 크고 40px 이상이면 월 전환
+    if (Math.abs(dx) > Math.abs(dy) * 1.2 && Math.abs(dx) > 40) {
+      if (dx > 0) prevMonth()
+      else nextMonth()
+    }
+  }
+
   const weeks: typeof cells[] = []
   for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7))
 
@@ -186,8 +203,13 @@ export default function MonthCalendar() {
         ))}
       </div>
 
-      {/* 날짜 그리드: div 기반 — 스크롤 가능, neg-margin으로 선 덮기 작동 */}
-      <div className="flex-1 overflow-y-auto">
+      {/* 날짜 그리드: div 기반 — 세로 스크롤, 가로 스와이프로 월 이동 */}
+      <div
+        className="flex-1 overflow-y-auto overflow-x-hidden"
+        style={{ touchAction: 'pan-y' }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {weeks.map((week, wi) => (
           <div
             key={wi}
