@@ -186,120 +186,115 @@ export default function MonthCalendar() {
         ))}
       </div>
 
-      {/* 날짜 그리드: 화면 전체 채우기 */}
-      <div className="flex-1 overflow-hidden">
-        <table className="w-full table-fixed border-collapse" style={{ height: '100%' }}>
-          <tbody>
-            {weeks.map((week, wi) => (
-              // 모든 행이 동일한 높이로 화면을 꽉 채움
-              <tr key={wi} className="border-b border-gray-100 last:border-0" style={{ height: `${100 / weeks.length}%` }}>
-                {week.map((cell, di) => {
-                  const isToday    = cell.date === TODAY
-                  const isSelected = cell.date === selectedDate && cell.inMonth
-                  const isSun      = di === 0
-                  const isSat      = di === 6
-                  const holiday    = KR_HOLIDAYS[cell.date]
-                  const chips      = chipMap[cell.date] ?? []
-                  const multidayChips = chips.filter(c => c.isMultiday)
-                  const regularChips  = chips.filter(c => !c.isMultiday)
+      {/* 날짜 그리드: div 기반 — 스크롤 가능, neg-margin으로 선 덮기 작동 */}
+      <div className="flex-1 overflow-y-auto">
+        {weeks.map((week, wi) => (
+          <div
+            key={wi}
+            className="grid grid-cols-7 border-b border-gray-100 last:border-0"
+          >
+            {week.map((cell, di) => {
+              const isToday    = cell.date === TODAY
+              const isSelected = cell.date === selectedDate && cell.inMonth
+              const isSun      = di === 0
+              const isSat      = di === 6
+              const holiday    = KR_HOLIDAYS[cell.date]
+              const chips      = chipMap[cell.date] ?? []
+              const multidayChips = chips.filter(c => c.isMultiday)
+              const regularChips  = chips.filter(c => !c.isMultiday)
 
-                  return (
-                    <td
-                      key={cell.date}
-                      onClick={() => handleDayTap(cell)}
-                      className={`align-top p-0 border-r border-gray-100 last:border-0 cursor-pointer select-none
-                        ${cell.inMonth ? '' : 'opacity-30'}`}
-                    >
-                      {/* 셀 높이 = 행 높이(%) — overflow:hidden 제거해야 neg-margin이 경계선을 덮음 */}
-                      <div style={{ height: '100%' }} className="py-0.5">
-                      {/* 날짜 번호 + 공휴일 */}
-                      <div className="flex flex-col items-center mb-0.5 pt-1">
-                        <span className={`
-                          text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full
-                          ${isToday ? 'bg-gray-900 text-white' : ''}
-                          ${isSelected && !isToday ? 'bg-emerald-500 text-white' : ''}
-                          ${!isToday && !isSelected && (isSun || holiday) ? 'text-red-400' : ''}
-                          ${!isToday && !isSelected && isSat && !holiday ? 'text-blue-400' : ''}
-                          ${!isToday && !isSelected && !isSun && !isSat && !holiday ? 'text-gray-700' : ''}
-                        `}>
-                          {cell.day}
-                        </span>
-                        {holiday && cell.inMonth && (
-                          <span style={{ fontSize: 7, lineHeight: '10px', color: '#ef4444', marginTop: 1 }} className="font-medium truncate w-full text-center px-0.5">
-                            {holiday}
-                          </span>
-                        )}
-                      </div>
+              return (
+                <div
+                  key={cell.date}
+                  onClick={() => handleDayTap(cell)}
+                  className={`border-r border-gray-100 last:border-0 cursor-pointer select-none
+                    ${cell.inMonth ? '' : 'opacity-30'}`}
+                  style={{ minHeight: 88 }}
+                >
+                  {/* 날짜 번호 + 공휴일 */}
+                  <div className="flex flex-col items-center pt-1 mb-0.5">
+                    <span className={`
+                      text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full
+                      ${isToday ? 'bg-gray-900 text-white' : ''}
+                      ${isSelected && !isToday ? 'bg-emerald-500 text-white' : ''}
+                      ${!isToday && !isSelected && (isSun || holiday) ? 'text-red-400' : ''}
+                      ${!isToday && !isSelected && isSat && !holiday ? 'text-blue-400' : ''}
+                      ${!isToday && !isSelected && !isSun && !isSat && !holiday ? 'text-gray-700' : ''}
+                    `}>
+                      {cell.day}
+                    </span>
+                    {holiday && cell.inMonth && (
+                      <span style={{ fontSize: 7, lineHeight: '10px', color: '#ef4444', marginTop: 1 }} className="font-medium truncate w-full text-center px-0.5">
+                        {holiday}
+                      </span>
+                    )}
+                  </div>
 
-                      {/* 다중일 이벤트 배너 — neg-margin으로 border-r 1px 덮어 끊김 없이 연결 */}
-                      {multidayChips.length > 0 && (
-                        <div className="space-y-0.5 mb-0.5">
-                          {multidayChips.map(chip => {
-                            const isMid   = chip.spanPos === 'mid'
-                            const isEnd   = chip.spanPos === 'end'
-                            const isStart = chip.spanPos === 'start'
-                            return (
-                              <div
-                                key={chip.id}
-                                style={{
-                                  backgroundColor: chip.bgColor,
-                                  color: chip.textColor,
-                                  fontSize: 8,
-                                  lineHeight: '13px',
-                                  textAlign: 'left',
-                                  fontWeight: 600,
-                                  overflow: 'hidden',
-                                  whiteSpace: 'nowrap',
-                                  marginLeft:  (isMid || isEnd)   ? -1 : 0,
-                                  marginRight: (isMid || isStart) ? -1 : 0,
-                                  paddingTop: 1,
-                                  paddingBottom: 1,
-                                  paddingLeft:  (isMid || isEnd)   ? 0 : 3,
-                                  paddingRight: (isMid || isStart) ? 0 : 3,
-                                  borderRadius:
-                                    isStart ? '3px 0 0 3px' :
-                                    isEnd   ? '0 3px 3px 0' :
-                                    isMid   ? 0 : 3,
-                                }}
-                              >
-                                {/* 시작 날짜만 텍스트 표시, mid/end는 공백으로 색만 채움 */}
-                                {(isMid || isEnd) ? '\u00A0' : chip.label}
-                              </div>
-                            )
-                          })}
-                        </div>
-                      )}
-
-                      {/* 일반 이벤트 칩 — overflow:hidden으로 넘치는 칩 숨김 */}
-                      <div className="space-y-0.5 px-0.5 overflow-hidden">
-                        {regularChips.map((chip) => (
+                  {/* 다중일 이벤트 배너 — div 그리드라 neg-margin이 border-r을 실제로 덮음 */}
+                  {multidayChips.length > 0 && (
+                    <div className="space-y-0.5 mb-0.5">
+                      {multidayChips.map(chip => {
+                        const isMid   = chip.spanPos === 'mid'
+                        const isEnd   = chip.spanPos === 'end'
+                        const isStart = chip.spanPos === 'start'
+                        return (
                           <div
                             key={chip.id}
                             style={{
                               backgroundColor: chip.bgColor,
                               color: chip.textColor,
                               fontSize: 8,
-                              padding: '1px 2px',
-                              lineHeight: '13px',
-                              textAlign: 'center',
-                              borderRadius: 3,
-                              overflow: 'hidden',
+                              lineHeight: '14px',
+                              fontWeight: 600,
                               whiteSpace: 'nowrap',
-                              fontWeight: 500,
+                              overflow: 'hidden',
+                              // div 그리드: 다음 셀이 이전 셀 border-r 위에 페인팅되므로 선 덮기 작동
+                              marginLeft:  (isMid || isEnd)   ? -1 : 0,
+                              marginRight: (isMid || isStart) ? -1 : 0,
+                              paddingTop: 1,
+                              paddingBottom: 1,
+                              paddingLeft:  (isMid || isEnd)   ? 0 : 3,
+                              paddingRight: (isMid || isStart) ? 0 : 3,
+                              borderRadius:
+                                isStart ? '3px 0 0 3px' :
+                                isEnd   ? '0 3px 3px 0' :
+                                isMid   ? 0 : 3,
                             }}
                           >
-                            {chip.label}
+                            {(isMid || isEnd) ? '\u00A0' : chip.label}
                           </div>
-                        ))}
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {/* 일반 이벤트 칩 */}
+                  <div className="space-y-0.5 px-0.5">
+                    {regularChips.map((chip) => (
+                      <div
+                        key={chip.id}
+                        style={{
+                          backgroundColor: chip.bgColor,
+                          color: chip.textColor,
+                          fontSize: 8,
+                          padding: '1px 2px',
+                          lineHeight: '13px',
+                          textAlign: 'center',
+                          borderRadius: 3,
+                          overflow: 'hidden',
+                          whiteSpace: 'nowrap',
+                          fontWeight: 500,
+                        }}
+                      >
+                        {chip.label}
                       </div>
-                      </div>{/* 셀 div 닫기 */}
-                    </td>
-                  )
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ))}
       </div>
     </div>
   )

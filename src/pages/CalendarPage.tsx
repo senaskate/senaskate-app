@@ -11,7 +11,7 @@ export default function CalendarPage() {
   return (
     <div className="flex flex-col h-full relative">
       {/* 캘린더 콘텐츠 */}
-      <div className="flex-1 overflow-hidden flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         {calendarView === 'month' ? <MonthCalendar /> : <DayView />}
       </div>
 
