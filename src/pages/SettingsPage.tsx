@@ -152,7 +152,7 @@ export default function SettingsPage() {
     const results = (await Promise.all(teachers.map(t => renderTeacherCanvas(t)))).filter(Boolean) as { canvas: HTMLCanvasElement; name: string }[]
     if (results.length === 0) return
 
-    // iOS: Web Share API로 모든 이미지 공유
+    // iOS: Web Share API로 모든 이미지 공유 — canShare 체크 없이 바로 시도
     if (typeof navigator.share === 'function') {
       try {
         const files = await Promise.all(
@@ -161,12 +161,11 @@ export default function SettingsPage() {
             return new File([blob], `${currentMonth}_${name}.png`, { type: 'image/png' })
           })
         )
-        if (navigator.canShare?.({ files })) {
-          await navigator.share({ files, title: `${currentMonth} 레슨비` })
-          return
-        }
+        await navigator.share({ files, title: `${currentMonth} 레슨비` })
+        return
       } catch (e) {
         if ((e as Error).name === 'AbortError') return
+        // share 실패 시 fallback으로 내려감
       }
     }
 

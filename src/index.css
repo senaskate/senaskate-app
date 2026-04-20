@@ -5,33 +5,30 @@
     -webkit-tap-highlight-color: transparent;
     box-sizing: border-box;
   }
-  html {
-    height: 100dvh;
+  html, body {
     margin: 0;
     padding: 0;
-    overflow: hidden;
+    overscroll-behavior: none;
   }
   body {
-    height: 100dvh;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: #f8f9fa;
     color: #1a1a1a;
-    overscroll-behavior: none;
     -webkit-font-smoothing: antialiased;
   }
   #root {
+    /* position:fixed + inset:0 → viewport-fit=cover 기준 물리적 화면 끝까지 커버
+       100dvh 는 iOS PWA 에서 홈 인디케이터 영역을 빠뜨리는 버그 있음 */
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
     display: flex;
     flex-direction: column;
-    height: 100dvh;
-    overflow: hidden;
     max-width: 430px;
     margin: 0 auto;
     background: #ffffff;
     padding-top: env(safe-area-inset-top, 0px);
     box-sizing: border-box;
+    overflow: hidden;
   }
   /* iOS 입력 줌 방지 */
   input[type="text"],
