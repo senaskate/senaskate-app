@@ -231,31 +231,43 @@ export default function MonthCalendar() {
                         )}
                       </div>
 
-                      {/* 다중일 이벤트 배너 (셀 전체 너비, 텍스트 중앙정렬) */}
+                      {/* 다중일 이벤트 배너 — 셀 경계선을 음수 마진으로 덮어 끊김 없이 연결 */}
                       {multidayChips.length > 0 && (
                         <div className="space-y-0.5 mb-0.5">
-                          {multidayChips.map(chip => (
-                            <div
-                              key={chip.id}
-                              style={{
-                                backgroundColor: chip.bgColor,
-                                color: chip.textColor,
-                                fontSize: 8,
-                                padding: '1px 2px',
-                                lineHeight: '13px',
-                                textAlign: 'center',
-                                borderRadius:
-                                  chip.spanPos === 'start' ? '3px 0 0 3px' :
-                                  chip.spanPos === 'end'   ? '0 3px 3px 0' :
-                                  chip.spanPos === 'single' ? '3px' : '0',
-                                overflow: 'hidden',
-                                whiteSpace: 'nowrap',
-                                fontWeight: 600,
-                              }}
-                            >
-                              {chip.spanPos === 'mid' ? '\u00A0' : chip.label}
-                            </div>
-                          ))}
+                          {multidayChips.map(chip => {
+                            const isMid   = chip.spanPos === 'mid'
+                            const isEnd   = chip.spanPos === 'end'
+                            const isStart = chip.spanPos === 'start'
+                            return (
+                              <div
+                                key={chip.id}
+                                style={{
+                                  backgroundColor: chip.bgColor,
+                                  color: chip.textColor,
+                                  fontSize: 8,
+                                  lineHeight: '13px',
+                                  textAlign: 'center',
+                                  fontWeight: 600,
+                                  overflow: 'hidden',
+                                  whiteSpace: 'nowrap',
+                                  // 왼쪽 경계선(1px)을 덮어서 끊김 없이 이어붙임
+                                  marginLeft:  (isMid || isEnd)   ? -1 : 0,
+                                  // 오른쪽 경계선도 덮어서 다음 셀과 연결
+                                  marginRight: (isMid || isStart) ? -1 : 0,
+                                  paddingTop: 1,
+                                  paddingBottom: 1,
+                                  paddingLeft:  (isMid || isEnd)   ? 0 : 3,
+                                  paddingRight: (isMid || isStart) ? 0 : 3,
+                                  borderRadius:
+                                    isStart ? '3px 0 0 3px' :
+                                    isEnd   ? '0 3px 3px 0' :
+                                    isMid   ? 0 : 3,
+                                }}
+                              >
+                                {isMid ? '\u00A0' : chip.label}
+                              </div>
+                            )
+                          })}
                         </div>
                       )}
 

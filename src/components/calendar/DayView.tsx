@@ -49,12 +49,12 @@ export default function DayView() {
   function prevDay() {
     const d = new Date(dateObj)
     d.setDate(d.getDate() - 1)
-    setSelectedDate(d.toISOString().split('T')[0])
+    setSelectedDate(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`)
   }
   function nextDay() {
     const d = new Date(dateObj)
     d.setDate(d.getDate() + 1)
-    setSelectedDate(d.toISOString().split('T')[0])
+    setSelectedDate(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`)
   }
 
   const blocks = useMemo<TimeBlock[]>(() => {
