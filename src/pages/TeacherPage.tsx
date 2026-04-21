@@ -54,14 +54,68 @@ export default function TeacherPage() {
   }
 
   async function handleDownloadImage() {
-    if (isDownloading || !printRef.current) return
+    if (isDownloading || !activeTeacher) return
     setIsDownloading(true)
     try {
-      const canvas = await html2canvas(printRef.current, { scale: 2, backgroundColor: '#ffffff' })
-      const dataUrl = canvas.toDataURL('image/png')
-      const filename = `${currentMonth}_${activeTeacher?.name ?? '선생님'}_레슨비.png`
+      // Tailwind 클래스 의존성 없이 인라인 스타일 div로 생성 (html2canvas 안정성↑)
+      const div = document.createElement('div')
+      div.style.cssText = 'position:fixed;top:-9999px;left:-9999px;background:#fff;width:390px;padding:20px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:13px;color:#1a1a1a;'
 
-      // Web Share API 시도 (iOS/Android)
+      const rows = Object.entries(grouped)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .flatMap(([date, ls]) =>
+          ls.flatMap((l, li) =>
+            l.students.map((s, si) => {
+              const isFirst = li === 0 && si === 0
+              return `<tr style="border-bottom:1px solid #f3f4f6">
+                <td style="padding:5px 8px;color:#6b7280">${isFirst ? date.slice(5).replace('-', '/') : ''}</td>
+                <td style="padding:5px 8px;color:#6b7280">${si === 0 ? l.location : ''}</td>
+                <td style="padding:5px 8px;font-weight:500">${s.name}${s.unpaid ? ' (미납)' : ''}</td>
+                <td style="padding:5px 8px;text-align:right;color:#6b7280">${s.minutes}분</td>
+                <td style="padding:5px 8px;text-align:right;font-weight:600">${(s.fee + (s.offIceFee ?? 0)).toLocaleString()}</td>
+              </tr>`
+            })
+          )
+        ).join('')
+
+      const totalsRows = Object.entries(studentTotals)
+        .map(([name, amt]) => `<tr style="border-bottom:1px solid #f3f4f6">
+          <td style="padding:6px 8px;font-weight:500">${name}</td>
+          <td style="padding:6px 8px;text-align:right;font-weight:600">${amt.toLocaleString()}</td>
+        </tr>`).join('')
+
+      div.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <span style="font-size:16px;font-weight:700">${activeTeacher.name}</span>
+          <span style="color:#6b7280">${year}년 ${month}월</span>
+        </div>
+        ${rows ? `<table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+          <thead><tr style="background:#f9fafb">
+            <th style="padding:7px 8px;text-align:left;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280">날짜</th>
+            <th style="padding:7px 8px;text-align:left;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280">장소</th>
+            <th style="padding:7px 8px;text-align:left;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280">이름</th>
+            <th style="padding:7px 8px;text-align:right;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280">시간</th>
+            <th style="padding:7px 8px;text-align:right;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280">금액</th>
+          </thead><tbody>${rows}</tbody></table>` : ''}
+        ${totalsRows ? `<table style="width:100%;border-collapse:collapse">
+          <thead><tr style="background:#f9fafb">
+            <th colspan="2" style="padding:7px 8px;text-align:left;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280">총계</th>
+          </tr></thead>
+          <tbody>${totalsRows}</tbody>
+          <tfoot><tr style="background:#f0fdf4">
+            <td style="padding:8px;font-weight:700">합계</td>
+            <td style="padding:8px;text-align:right;font-weight:700;color:#059669;font-size:15px">${total.toLocaleString()}원</td>
+          </tr></tfoot>
+        </table>` : ''}
+      `
+      document.body.appendChild(div)
+      const canvas = await html2canvas(div, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false })
+      document.body.removeChild(div)
+
+      const dataUrl = canvas.toDataURL('image/png')
+      const filename = `${currentMonth}_${activeTeacher.name}_레슨비.png`
+
+      // Web Share API 시도
       if (typeof navigator.share === 'function') {
         try {
           const blob = await (await fetch(dataUrl)).blob()
@@ -70,11 +124,10 @@ export default function TeacherPage() {
           return
         } catch (e) {
           if ((e as Error).name === 'AbortError') return
-          // 실패 → 인앱 미리보기로
         }
       }
 
-      // iOS: 인앱 이미지 미리보기 → 길게 눌러 저장
+      // iOS fallback: 인앱 미리보기
       if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
         setPreviewUrl(dataUrl)
         return
@@ -87,7 +140,7 @@ export default function TeacherPage() {
       link.click()
     } catch (err) {
       console.error('이미지 저장 실패:', err)
-      alert('이미지 생성에 실패했습니다. 잠시 후 다시 시도해주세요.')
+      alert('이미지 생성에 실패했습니다.')
     } finally {
       setIsDownloading(false)
     }
