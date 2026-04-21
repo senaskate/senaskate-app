@@ -56,13 +56,16 @@ export default function App() {
           {activeTab === 'choreo' && <ChoreoPage />}
           {activeTab === 'settings' && <SettingsPage />}
         </main>
-        <BottomNav active={activeTab} onChange={setActiveTab} />
+        {/* BottomNav는 position:fixed라 flex 흐름 밖 → 동일 높이만큼 spacer로 콘텐츠 밀기 */}
+        <div style={{ height: 'calc(57px + env(safe-area-inset-bottom, 0px))', flexShrink: 0 }} />
         <BottomSheet open={inputModal.open} onClose={closeInputModal}>
           {inputModal.type === 'lesson' && <LessonInput />}
           {inputModal.type === 'choreo' && <ChoreoInput />}
           {inputModal.type === 'personal' && <PersonalEventInput />}
         </BottomSheet>
       </div>
+      {/* position:fixed로 항상 화면 맨 아래 고정 */}
+      <BottomNav active={activeTab} onChange={setActiveTab} />
     </>
   )
 }
