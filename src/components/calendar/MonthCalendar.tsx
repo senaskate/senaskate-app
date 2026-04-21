@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useMemo } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db'
 import { useAppStore } from '../../stores/appStore'
@@ -6,6 +6,17 @@ import { DAY_LABELS, KR_HOLIDAYS, localDateStr } from '../../rules/utils'
 import { ChevronDown } from 'lucide-react'
 
 const TODAY = localDateStr()
+
+// hex 색을 흰색과 혼합해 연한 불투명 파스텔 색 생성 (amount=0.8 → 80% 흰색)
+function lightenHex(hex: string, amount = 0.82): string {
+  const h = hex.replace('#', '')
+  const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h
+  const r = parseInt(full.slice(0, 2), 16)
+  const g = parseInt(full.slice(2, 4), 16)
+  const b = parseInt(full.slice(4, 6), 16)
+  const mix = (n: number) => Math.round(n + (255 - n) * amount).toString(16).padStart(2, '0')
+  return `#${mix(r)}${mix(g)}${mix(b)}`
+}
 
 type SpanPos = 'single' | 'start' | 'mid' | 'end'
 
@@ -84,8 +95,8 @@ export default function MonthCalendar() {
         map[d].unshift({
           id: p.id + '-' + d,
           label: p.title,
-          bgColor: p.color,
-          textColor: '#ffffff',
+          bgColor: lightenHex(p.color),
+          textColor: p.color,
           isMultiday: true,
           spanPos,
         })
@@ -100,8 +111,8 @@ export default function MonthCalendar() {
       map[l.date].push({
         id: l.id,
         label: `${l.location}${range}`,
-        bgColor: '#10b981',
-        textColor: '#ffffff',
+        bgColor: '#d1fae5',   // 연한 초록 (불투명)
+        textColor: '#059669',
         isMultiday: false,
         spanPos: 'single',
       })
@@ -116,8 +127,8 @@ export default function MonthCalendar() {
       map[p.date].push({
         id: p.id,
         label: `${p.title}${timeLabel}`,
-        bgColor: p.color,
-        textColor: '#ffffff',
+        bgColor: lightenHex(p.color),
+        textColor: p.color,
         isMultiday: false,
         spanPos: 'single',
       })
@@ -161,23 +172,6 @@ export default function MonthCalendar() {
     setCalendarView('day')
   }
 
-  // 스와이프로 이전/다음 달 이동
-  const touchStartX = useRef(0)
-  const touchStartY = useRef(0)
-  function handleTouchStart(e: React.TouchEvent) {
-    touchStartX.current = e.touches[0].clientX
-    touchStartY.current = e.touches[0].clientY
-  }
-  function handleTouchEnd(e: React.TouchEvent) {
-    const dx = e.changedTouches[0].clientX - touchStartX.current
-    const dy = e.changedTouches[0].clientY - touchStartY.current
-    // 가로 이동이 세로보다 크고 40px 이상이면 월 전환
-    if (Math.abs(dx) > Math.abs(dy) * 1.2 && Math.abs(dx) > 40) {
-      if (dx > 0) prevMonth()
-      else nextMonth()
-    }
-  }
-
   const weeks: typeof cells[] = []
   for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7))
 
@@ -203,13 +197,8 @@ export default function MonthCalendar() {
         ))}
       </div>
 
-      {/* 날짜 그리드: div 기반 — 세로 스크롤, 가로 스와이프로 월 이동 */}
-      <div
-        className="flex-1 overflow-y-auto overflow-x-hidden"
-        style={{ touchAction: 'pan-y' }}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
+      {/* 날짜 그리드: div 기반 — 세로 스크롤 가능, 가로 스크롤 차단 */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
         {weeks.map((week, wi) => (
           <div
             key={wi}

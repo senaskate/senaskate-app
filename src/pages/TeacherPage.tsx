@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { useAppStore } from '../stores/appStore'
@@ -21,6 +21,7 @@ export default function TeacherPage() {
 
   const printRef = useRef<HTMLDivElement>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [isDownloading, setIsDownloading] = useState(false)
 
   const activeTeacher = teachers.find(t => t.id === activeTeacherId) ?? teachers[0]
 
@@ -52,37 +53,45 @@ export default function TeacherPage() {
     setCurrentMonth(toYYYYMM(d))
   }
 
-  const handleDownloadImage = useCallback(async () => {
-    if (!printRef.current) return
-    const canvas = await html2canvas(printRef.current, { scale: 2, backgroundColor: '#ffffff' })
-    const dataUrl = canvas.toDataURL('image/png')
-    const filename = `${currentMonth}_${activeTeacher?.name ?? '선생님'}_레슨비.png`
+  async function handleDownloadImage() {
+    if (isDownloading || !printRef.current) return
+    setIsDownloading(true)
+    try {
+      const canvas = await html2canvas(printRef.current, { scale: 2, backgroundColor: '#ffffff' })
+      const dataUrl = canvas.toDataURL('image/png')
+      const filename = `${currentMonth}_${activeTeacher?.name ?? '선생님'}_레슨비.png`
 
-    // Web Share API (iOS/Android) 시도
-    if (typeof navigator.share === 'function') {
-      try {
-        const blob = await (await fetch(dataUrl)).blob()
-        const file = new File([blob], filename, { type: 'image/png' })
-        await navigator.share({ files: [file], title: filename })
-        return
-      } catch (e) {
-        if ((e as Error).name === 'AbortError') return
-        // 실패 시 인앱 미리보기로 폴백
+      // Web Share API 시도 (iOS/Android)
+      if (typeof navigator.share === 'function') {
+        try {
+          const blob = await (await fetch(dataUrl)).blob()
+          const file = new File([blob], filename, { type: 'image/png' })
+          await navigator.share({ files: [file], title: filename })
+          return
+        } catch (e) {
+          if ((e as Error).name === 'AbortError') return
+          // 실패 → 인앱 미리보기로
+        }
       }
-    }
 
-    // iOS: 팝업이 막히므로 인앱 이미지 미리보기 → 길게 눌러 저장
-    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-      setPreviewUrl(dataUrl)
-      return
-    }
+      // iOS: 인앱 이미지 미리보기 → 길게 눌러 저장
+      if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        setPreviewUrl(dataUrl)
+        return
+      }
 
-    // 데스크톱: 링크 다운로드
-    const link = document.createElement('a')
-    link.download = filename
-    link.href = dataUrl
-    link.click()
-  }, [printRef, currentMonth, activeTeacher])
+      // 데스크톱 다운로드
+      const link = document.createElement('a')
+      link.download = filename
+      link.href = dataUrl
+      link.click()
+    } catch (err) {
+      console.error('이미지 저장 실패:', err)
+      alert('이미지 생성에 실패했습니다. 잠시 후 다시 시도해주세요.')
+    } finally {
+      setIsDownloading(false)
+    }
+  }
 
   if (!activeTeacher) return null
 
@@ -202,10 +211,11 @@ export default function TeacherPage() {
       <div className="px-4 py-4 border-t border-gray-100">
         <button
           onClick={handleDownloadImage}
-          className="w-full flex items-center justify-center gap-2 bg-gray-800 text-white rounded-xl py-3 text-sm font-medium"
+          disabled={isDownloading}
+          className="w-full flex items-center justify-center gap-2 bg-gray-800 text-white rounded-xl py-3 text-sm font-medium disabled:opacity-50"
         >
           <Download size={16} />
-          이미지로 저장
+          {isDownloading ? '이미지 생성 중...' : '이미지로 저장'}
         </button>
       </div>
 
