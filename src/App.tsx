@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { seedIfEmpty } from './db/seed'
 import { seedHistoricalData } from './db/historicalSeed'
 import { seedAprilData } from './db/aprilSeed'
@@ -64,8 +65,11 @@ export default function App() {
           {inputModal.type === 'personal' && <PersonalEventInput />}
         </BottomSheet>
       </div>
-      {/* position:fixed로 항상 화면 맨 아래 고정 */}
-      <BottomNav active={activeTab} onChange={setActiveTab} />
+      {/* Portal: #root overflow:hidden 바깥 body에 직접 마운트 → iOS에서도 확실히 최하단 고정 */}
+      {createPortal(
+        <BottomNav active={activeTab} onChange={setActiveTab} />,
+        document.body
+      )}
     </>
   )
 }
