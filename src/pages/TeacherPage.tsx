@@ -43,6 +43,7 @@ export default function TeacherPage() {
   }, {})
 
   const total = Object.values(studentTotals).reduce((a, b) => a + b, 0)
+  const showGrandTotal = activeTeacher?.name === '나희쌤'
 
   function prevMonth() {
     const d = new Date(year, month - 2, 1)
@@ -61,6 +62,7 @@ export default function TeacherPage() {
       const div = document.createElement('div')
       div.style.cssText = 'position:fixed;top:-9999px;left:-9999px;background:#fff;width:390px;padding:20px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:13px;color:#1a1a1a;'
 
+      // 레슨 내역 행: 작고 연한 글씨
       const rows = Object.entries(grouped)
         .sort(([a], [b]) => a.localeCompare(b))
         .flatMap(([date, ls]) =>
@@ -68,21 +70,24 @@ export default function TeacherPage() {
             l.students.map((s, si) => {
               const isFirst = li === 0 && si === 0
               return `<tr style="border-bottom:1px solid #f3f4f6">
-                <td style="padding:5px 8px;color:#6b7280">${isFirst ? date.slice(5).replace('-', '/') : ''}</td>
-                <td style="padding:5px 8px;color:#6b7280">${si === 0 ? l.location : ''}</td>
-                <td style="padding:5px 8px;font-weight:500">${s.name}${s.unpaid ? ' (미납)' : ''}</td>
-                <td style="padding:5px 8px;text-align:right;color:#6b7280">${s.minutes}분</td>
-                <td style="padding:5px 8px;text-align:right;font-weight:600">${(s.fee + (s.offIceFee ?? 0)).toLocaleString()}</td>
+                <td style="padding:4px 8px;font-size:11px;color:#9ca3af">${isFirst ? date.slice(5).replace('-', '/') : ''}</td>
+                <td style="padding:4px 8px;font-size:11px;color:#9ca3af">${si === 0 ? l.location : ''}</td>
+                <td style="padding:4px 8px;font-size:11px;color:#9ca3af">${s.name}${s.unpaid ? ' (미납)' : ''}</td>
+                <td style="padding:4px 8px;font-size:11px;text-align:right;color:#9ca3af">${s.minutes}분</td>
+                <td style="padding:4px 8px;font-size:11px;text-align:right;color:#9ca3af">${(s.fee + (s.offIceFee ?? 0)).toLocaleString()}</td>
               </tr>`
             })
           )
         ).join('')
 
+      // 총계 행: 크고 굵은 글씨
       const totalsRows = Object.entries(studentTotals)
         .map(([name, amt]) => `<tr style="border-bottom:1px solid #f3f4f6">
-          <td style="padding:6px 8px;font-weight:500">${name}</td>
-          <td style="padding:6px 8px;text-align:right;font-weight:600">${amt.toLocaleString()}</td>
+          <td style="padding:8px 8px;font-size:14px;font-weight:700;color:#1a1a1a">${name}</td>
+          <td style="padding:8px 8px;font-size:14px;text-align:right;font-weight:700;color:#1a1a1a">${amt.toLocaleString()}</td>
         </tr>`).join('')
+
+      const showTotal = activeTeacher.name === '나희쌤'
 
       div.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
@@ -91,21 +96,21 @@ export default function TeacherPage() {
         </div>
         ${rows ? `<table style="width:100%;border-collapse:collapse;margin-bottom:16px">
           <thead><tr style="background:#f9fafb">
-            <th style="padding:7px 8px;text-align:left;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280">날짜</th>
-            <th style="padding:7px 8px;text-align:left;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280">장소</th>
-            <th style="padding:7px 8px;text-align:left;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280">이름</th>
-            <th style="padding:7px 8px;text-align:right;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280">시간</th>
-            <th style="padding:7px 8px;text-align:right;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280">금액</th>
+            <th style="padding:6px 8px;text-align:left;border-bottom:1px solid #e5e7eb;font-size:10px;color:#9ca3af">날짜</th>
+            <th style="padding:6px 8px;text-align:left;border-bottom:1px solid #e5e7eb;font-size:10px;color:#9ca3af">장소</th>
+            <th style="padding:6px 8px;text-align:left;border-bottom:1px solid #e5e7eb;font-size:10px;color:#9ca3af">이름</th>
+            <th style="padding:6px 8px;text-align:right;border-bottom:1px solid #e5e7eb;font-size:10px;color:#9ca3af">시간</th>
+            <th style="padding:6px 8px;text-align:right;border-bottom:1px solid #e5e7eb;font-size:10px;color:#9ca3af">금액</th>
           </thead><tbody>${rows}</tbody></table>` : ''}
         ${totalsRows ? `<table style="width:100%;border-collapse:collapse">
           <thead><tr style="background:#f9fafb">
-            <th colspan="2" style="padding:7px 8px;text-align:left;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280">총계</th>
+            <th colspan="2" style="padding:7px 8px;text-align:left;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280;font-weight:600">총계</th>
           </tr></thead>
           <tbody>${totalsRows}</tbody>
-          <tfoot><tr style="background:#f0fdf4">
-            <td style="padding:8px;font-weight:700">합계</td>
-            <td style="padding:8px;text-align:right;font-weight:700;color:#059669;font-size:15px">${total.toLocaleString()}원</td>
-          </tr></tfoot>
+          ${showTotal ? `<tfoot><tr style="background:#f0fdf4">
+            <td style="padding:10px 8px;font-size:15px;font-weight:700">합계</td>
+            <td style="padding:10px 8px;text-align:right;font-weight:800;color:#059669;font-size:17px">${total.toLocaleString()}원</td>
+          </tr></tfoot>` : ''}
         </table>` : ''}
       `
       document.body.appendChild(div)
@@ -219,16 +224,16 @@ export default function TeacherPage() {
                         const locationLabel = si === 0 ? l.location : ''
                         return (
                           <tr key={`${l.id}-${si}`} className="border-b border-gray-100 last:border-0">
-                            <td className="px-3 py-2 text-gray-600">{dateLabel}</td>
-                            <td className="px-3 py-2 text-gray-600">{locationLabel}</td>
-                            <td className="px-3 py-2 text-gray-800 font-medium">
+                            <td className="px-3 py-1.5 text-xs text-gray-400">{dateLabel}</td>
+                            <td className="px-3 py-1.5 text-xs text-gray-400">{locationLabel}</td>
+                            <td className="px-3 py-1.5 text-xs text-gray-400">
                               {s.name}
-                              {s.unpaid && <span className="ml-1 text-xs text-red-400">(미납)</span>}
+                              {s.unpaid && <span className="ml-1 text-red-300">(미납)</span>}
                             </td>
-                            <td className="px-3 py-2 text-right text-gray-600">
+                            <td className="px-3 py-1.5 text-right text-xs text-gray-400">
                               {s.minutes !== 0 ? `${s.minutes}분` : '-'}
                             </td>
-                            <td className="px-3 py-2 text-right font-medium text-gray-800">
+                            <td className="px-3 py-1.5 text-right text-xs text-gray-400">
                               {(s.fee + (s.offIceFee ?? 0)).toLocaleString()}
                             </td>
                           </tr>
@@ -246,15 +251,17 @@ export default function TeacherPage() {
             <div className="border border-gray-200 rounded-xl overflow-hidden">
               <div className="bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-500 border-b border-gray-200">총계</div>
               {Object.entries(studentTotals).map(([name, amt]) => (
-                <div key={name} className="flex justify-between px-3 py-2 border-b border-gray-100 last:border-0">
-                  <span className="text-sm text-gray-800 font-medium">{name}</span>
-                  <span className="text-sm font-semibold text-gray-800">{amt.toLocaleString()}</span>
+                <div key={name} className="flex justify-between px-3 py-2.5 border-b border-gray-100 last:border-0">
+                  <span className="text-base font-bold text-gray-900">{name}</span>
+                  <span className="text-base font-bold text-gray-900">{amt.toLocaleString()}</span>
                 </div>
               ))}
-              <div className="flex justify-between px-3 py-3 bg-gray-50">
-                <span className="text-sm font-bold text-gray-800">합계</span>
-                <span className="text-base font-bold text-emerald-600">{formatKRW(total)}</span>
-              </div>
+              {showGrandTotal && (
+                <div className="flex justify-between px-3 py-3 bg-gray-50">
+                  <span className="text-base font-bold text-gray-800">합계</span>
+                  <span className="text-lg font-extrabold text-emerald-600">{formatKRW(total)}</span>
+                </div>
+              )}
             </div>
           )}
         </div>
