@@ -58,7 +58,7 @@ export default function App() {
           {activeTab === 'settings' && <SettingsPage />}
         </main>
         {/* BottomNav는 position:fixed라 flex 흐름 밖 → 동일 높이만큼 spacer로 콘텐츠 밀기 */}
-        <div style={{ height: 'calc(57px + env(safe-area-inset-bottom, 0px))', flexShrink: 0 }} />
+        <div style={{ height: 58, flexShrink: 0 }} />
         <BottomSheet open={inputModal.open} onClose={closeInputModal}>
           {inputModal.type === 'lesson' && <LessonInput />}
           {inputModal.type === 'choreo' && <ChoreoInput />}
