@@ -16,15 +16,11 @@ const TABS = [
 export default function BottomNav({ active, onChange }: BottomNavProps) {
   return (
     <nav
-      className="flex items-center border-t border-gray-100 bg-white"
+      className="flex items-center border-t border-gray-100 bg-white flex-shrink-0"
       style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        maxWidth: 430,
-        margin: '0 auto',
-        zIndex: 40,
+        // position:fixed 없음 — #root(position:fixed; bottom:0)의 flex 마지막 자식으로
+        // 자동으로 화면 정확한 최하단에 위치
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
     >
       {TABS.map(({ id, icon: Icon, label }) => (

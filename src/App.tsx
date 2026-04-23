@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
 import { seedIfEmpty } from './db/seed'
 import { seedHistoricalData } from './db/historicalSeed'
 import { seedAprilData } from './db/aprilSeed'
@@ -44,32 +43,26 @@ export default function App() {
   return (
     <>
       <SplashScreen />
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        <main
-          className="flex-1 min-h-0 overflow-hidden flex flex-col"
-          style={{ touchAction: 'pan-y' }}
-          onTouchStart={handleSwipeTouchStart}
-          onTouchEnd={handleSwipeTouchEnd}
-        >
-          {activeTab === 'calendar' && <CalendarPage />}
-          {activeTab === 'stats' && <StatsPage />}
-          {activeTab === 'teacher' && <TeacherPage />}
-          {activeTab === 'choreo' && <ChoreoPage />}
-          {activeTab === 'settings' && <SettingsPage />}
-        </main>
-        {/* BottomNav는 position:fixed라 flex 흐름 밖 → 동일 높이만큼 spacer로 콘텐츠 밀기 */}
-        <div style={{ height: 58, flexShrink: 0 }} />
-        <BottomSheet open={inputModal.open} onClose={closeInputModal}>
-          {inputModal.type === 'lesson' && <LessonInput />}
-          {inputModal.type === 'choreo' && <ChoreoInput />}
-          {inputModal.type === 'personal' && <PersonalEventInput />}
-        </BottomSheet>
-      </div>
-      {/* Portal: #root overflow:hidden 바깥 body에 직접 마운트 → iOS에서도 확실히 최하단 고정 */}
-      {createPortal(
-        <BottomNav active={activeTab} onChange={setActiveTab} />,
-        document.body
-      )}
+      <main
+        className="flex-1 min-h-0 overflow-hidden flex flex-col"
+        style={{ touchAction: 'pan-y' }}
+        onTouchStart={handleSwipeTouchStart}
+        onTouchEnd={handleSwipeTouchEnd}
+      >
+        {activeTab === 'calendar' && <CalendarPage />}
+        {activeTab === 'stats' && <StatsPage />}
+        {activeTab === 'teacher' && <TeacherPage />}
+        {activeTab === 'choreo' && <ChoreoPage />}
+        {activeTab === 'settings' && <SettingsPage />}
+      </main>
+      {/* #root가 position:fixed top:0 bottom:0 이므로
+          flex 마지막 자식인 BottomNav가 정확히 화면 맨 아래에 붙음 */}
+      <BottomNav active={activeTab} onChange={setActiveTab} />
+      <BottomSheet open={inputModal.open} onClose={closeInputModal}>
+        {inputModal.type === 'lesson' && <LessonInput />}
+        {inputModal.type === 'choreo' && <ChoreoInput />}
+        {inputModal.type === 'personal' && <PersonalEventInput />}
+      </BottomSheet>
     </>
   )
 }
