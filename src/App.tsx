@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { seedIfEmpty } from './db/seed'
+import { seedIfEmpty, seedNewTeachers } from './db/seed'
 import { seedHistoricalData } from './db/historicalSeed'
 import { seedAprilData } from './db/aprilSeed'
 import BottomNav from './components/common/BottomNav'
@@ -37,7 +37,7 @@ export default function App() {
   }
 
   useEffect(() => {
-    seedIfEmpty().then(() => seedHistoricalData()).then(() => seedAprilData())
+    seedIfEmpty().then(() => seedHistoricalData()).then(() => seedAprilData()).then(() => seedNewTeachers())
   }, [])
 
   return (

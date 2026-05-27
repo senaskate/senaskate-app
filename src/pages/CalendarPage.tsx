@@ -24,8 +24,8 @@ export default function CalendarPage() {
               <div className="absolute bottom-20 right-4 z-20 flex flex-col gap-2 items-end">
                 {[
                   { type: 'lesson' as const, label: '레슨', color: '#10b981' },
-                  { type: 'choreo' as const, label: '안무', color: '#8b5cf6' },
-                  { type: 'personal' as const, label: '개인 일정', color: '#60a5fa' },
+                  { type: 'choreo' as const, label: '안무', color: '#10b981' },
+                  { type: 'personal' as const, label: '개인 일정', color: '#8b5cf6' },
                 ].map(({ type, label, color }) => (
                   <button
                     key={type}

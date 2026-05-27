@@ -58,12 +58,26 @@ export const INITIAL_TEACHERS: Teacher[] = [
     students: [],
   },
   {
+    id: 'jieun',
+    name: '지은쌤',
+    color: '#f43f5e',
+    students: [],
+  },
+  {
     id: 'jeonju',
     name: '전주',
     color: '#14b8a6',
     students: ['강희', '민아', '혜림', '로이', '혜은'],
   },
 ]
+
+// 기존 DB에 새 선생님 추가 (마이그레이션용)
+export async function seedNewTeachers() {
+  const existing = await db.teachers.get('jieun')
+  if (!existing) {
+    await db.teachers.add({ id: 'jieun', name: '지은쌤', color: '#f43f5e', students: [] })
+  }
+}
 
 export async function seedIfEmpty() {
   const teacherCount = await db.teachers.count()

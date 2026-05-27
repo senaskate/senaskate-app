@@ -9,7 +9,7 @@ export interface Teacher {
 }
 
 // ─── 레슨 유형 ────────────────────────────────────────────
-export type LessonType = 'individual' | 'semi' | 'group'
+export type LessonType = 'individual' | 'semi' | 'group' | 'choreo' | 'choreo_revision'
 
 export interface LessonEntry {
   id: string
@@ -97,7 +97,7 @@ export interface PriceConfig {
 }
 
 // ─── 장소 목록 ────────────────────────────────────────────
-export const LOCATIONS = ['김포', '롯데', '목동', '지하', '지상', '제2', '태릉', '과천', '세종', '공주', '안양', '현진집', '기타'] as const
+export const LOCATIONS = ['김포', '롯데', '목동', '지하', '지상', '제2', '태릉', '과천', '세종', '공주', '안양', '전주', '기타'] as const
 export type Location = typeof LOCATIONS[number]
 
 // ─── 안무 레벨 표시명 ─────────────────────────────────────

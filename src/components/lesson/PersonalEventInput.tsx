@@ -4,7 +4,14 @@ import { useAppStore } from '../../stores/appStore'
 import { generateId } from '../../rules/utils'
 import { X, Trash2 } from 'lucide-react'
 
-const PRESET_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#6b7280']
+const PRESET_CATEGORIES = [
+  { label: '개인', color: '#8b5cf6' },
+  { label: '여행', color: '#3b82f6' },
+  { label: '예약', color: '#84cc16' },
+  { label: '미용', color: '#ec4899' },
+  { label: '생일', color: '#eab308' },
+  { label: '중요', color: '#ef4444' },
+]
 
 export default function PersonalEventInput() {
   const { inputModal, closeInputModal, selectedDate } = useAppStore()
@@ -16,7 +23,7 @@ export default function PersonalEventInput() {
   const [title, setTitle] = useState('')
   const [startTime, setStartTime] = useState('09:00')
   const [endTime, setEndTime] = useState('10:00')
-  const [color, setColor] = useState('#3b82f6')
+  const [color, setColor] = useState('#8b5cf6')
   const [note, setNote] = useState('')
   const [allDay, setAllDay] = useState(false)
   const [multiDay, setMultiDay] = useState(false)
@@ -94,14 +101,19 @@ export default function PersonalEventInput() {
         {/* 색상 */}
         <div>
           <label className="text-xs text-gray-400 font-medium mb-2 block">색상</label>
-          <div className="flex gap-2">
-            {PRESET_COLORS.map(c => (
+          <div className="grid grid-cols-3 gap-2">
+            {PRESET_CATEGORIES.map(({ label, color: c }) => (
               <button
                 key={c}
                 onClick={() => setColor(c)}
-                className={`w-8 h-8 rounded-full transition-transform ${color === c ? 'scale-125 ring-2 ring-offset-2' : ''}`}
-                style={{ backgroundColor: c }}
-              />
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border transition-colors ${
+                  color === c ? 'text-white border-transparent' : 'bg-gray-50 text-gray-600 border-gray-200'
+                }`}
+                style={color === c ? { backgroundColor: c } : {}}
+              >
+                <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: c }} />
+                {label}
+              </button>
             ))}
           </div>
         </div>

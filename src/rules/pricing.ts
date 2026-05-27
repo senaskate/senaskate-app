@@ -1,6 +1,7 @@
 import type { LessonType, PriceConfig } from '../types'
 
 export function calcLessonFee(minutes: number, type: LessonType, config: PriceConfig): number {
+  if (type === 'choreo' || type === 'choreo_revision') return 0
   const ratePerMin = config[type === 'individual' ? 'individual' : type === 'semi' ? 'semi' : 'group']
   return Math.round(minutes * ratePerMin)
 }

@@ -115,7 +115,7 @@ export default function LessonInput() {
 
   async function handleSave() {
     const validStudents = students.filter(s => s.name.trim() && s.minutes.trim())
-    if (!date || !location || !teacherId || validStudents.length === 0) return
+    if (!date || !location || !teacherId) return
 
     const lesson = {
       id: editId ?? generateId(),
@@ -211,7 +211,7 @@ export default function LessonInput() {
             선생님 {teacherLocked && <span className="text-emerald-500">(자동배정)</span>}
           </label>
           <div className="grid grid-cols-3 gap-2">
-            {teachers.filter(t => t.id !== 'jeonju').map(t => (
+            {teachers.map(t => (
               <button
                 key={t.id}
                 onClick={() => !teacherLocked && setTeacherId(t.id as TeacherId)}
@@ -244,6 +244,21 @@ export default function LessonInput() {
                 }`}
               >
                 {label}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2 mt-2">
+            {(['choreo', 'choreo_revision'] as LessonType[]).map((type) => (
+              <button
+                key={type}
+                onClick={() => setLessonType(type)}
+                className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-colors ${
+                  lessonType === type
+                    ? 'bg-violet-500 text-white border-violet-500'
+                    : 'bg-gray-50 text-gray-600 border-gray-200'
+                }`}
+              >
+                {type === 'choreo' ? '안무' : '안무수정'}
               </button>
             ))}
           </div>

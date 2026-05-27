@@ -103,8 +103,12 @@ export default function MonthCalendar() {
       })
     }
 
-    // ② 레슨
-    for (const l of lessons) {
+    // ② 레슨 (startTime 순 정렬)
+    const sortedLessons = [...lessons].sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date)
+      return (a.startTime ?? '99:99').localeCompare(b.startTime ?? '99:99')
+    })
+    for (const l of sortedLessons) {
       ensure(l.date)
       const maxMin = l.students.length > 0 ? Math.max(...l.students.map(s => s.minutes)) : 60
       const range = makeTimeRange(l.startTime, l.endTime, maxMin)
@@ -222,10 +226,10 @@ export default function MonthCalendar() {
                     ${cell.inMonth ? '' : 'opacity-30'}`}
                   style={{ minHeight: 88 }}
                 >
-                  {/* 날짜 번호 + 공휴일 */}
-                  <div className="flex flex-col items-center pt-1 mb-0.5">
+                  {/* 날짜 번호 + 공휴일 인라인 */}
+                  <div className="flex items-center pt-1 px-1 mb-0.5 gap-0.5 min-w-0">
                     <span className={`
-                      text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full
+                      text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0
                       ${isToday ? 'bg-gray-900 text-white' : ''}
                       ${isSelected && !isToday ? 'bg-emerald-500 text-white' : ''}
                       ${!isToday && !isSelected && (isSun || holiday) ? 'text-red-400' : ''}
@@ -235,7 +239,7 @@ export default function MonthCalendar() {
                       {cell.day}
                     </span>
                     {holiday && cell.inMonth && (
-                      <span style={{ fontSize: 7, lineHeight: '10px', color: '#ef4444', marginTop: 1 }} className="font-medium truncate w-full text-center px-0.5">
+                      <span style={{ fontSize: 7, lineHeight: '10px', color: '#ef4444' }} className="font-medium truncate min-w-0">
                         {holiday}
                       </span>
                     )}
