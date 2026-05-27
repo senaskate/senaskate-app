@@ -14,6 +14,16 @@ interface StudentRow {
   offIce: boolean
   offIceFee: string
   unpaid: boolean
+  choreo: boolean
+}
+
+function formatComma(v: string): string {
+  const num = v.replace(/\D/g, '')
+  if (!num) return ''
+  return parseInt(num, 10).toLocaleString('ko-KR')
+}
+function parseComma(v: string): number {
+  return parseInt(v.replace(/,/g, ''), 10) || 0
 }
 
 export default function LessonInput() {
@@ -32,7 +42,7 @@ export default function LessonInput() {
   const [teacherLocked, setTeacherLocked] = useState(false)
   const [lessonType, setLessonType] = useState<LessonType>('individual')
   const [semiConfirmShown, setSemiConfirmShown] = useState(false)
-  const [students, setStudents] = useState<StudentRow[]>([{ name: '', minutes: '', offIce: false, offIceFee: '', unpaid: false }])
+  const [students, setStudents] = useState<StudentRow[]>([{ name: '', minutes: '', offIce: false, offIceFee: '', unpaid: false, choreo: false }])
   const [note, setNote] = useState('')
   const [travelFee, setTravelFee] = useState('')
   const [accommodationFee, setAccommodationFee] = useState('')
@@ -54,7 +64,10 @@ export default function LessonInput() {
           offIce: !!s.offIceFee,
           offIceFee: s.offIceFee ? String(s.offIceFee) : '',
           unpaid: !!s.unpaid,
+          choreo: !!s.choreo,
         })))
+        setTravelFee(lesson.travelFee ? lesson.travelFee.toLocaleString('ko-KR') : '')
+        setAccommodationFee(lesson.accommodationFee ? lesson.accommodationFee.toLocaleString('ko-KR') : '')
         setNote(lesson.note ?? '')
       })
     }
@@ -81,7 +94,7 @@ export default function LessonInput() {
   }
 
   function addStudent() {
-    const next = [...students, { name: '', minutes: '', offIce: false, offIceFee: '', unpaid: false }]
+    const next = [...students, { name: '', minutes: '', offIce: false, offIceFee: '', unpaid: false, choreo: false }]
     setStudents(next)
     handleStudentCountChange(next)
   }
@@ -112,6 +125,7 @@ export default function LessonInput() {
   }
 
   const totalFee = students.reduce((sum, s) => sum + calcFee(s), 0)
+    + parseComma(travelFee) + parseComma(accommodationFee)
 
   async function handleSave() {
     const validStudents = students.filter(s => s.name.trim() && s.minutes.trim())
@@ -125,14 +139,15 @@ export default function LessonInput() {
       location,
       type: lessonType,
       note,
-      travelFee: travelFee ? parseInt(travelFee) : undefined,
-      accommodationFee: accommodationFee ? parseInt(accommodationFee) : undefined,
+      travelFee: travelFee ? parseComma(travelFee) : undefined,
+      accommodationFee: accommodationFee ? parseComma(accommodationFee) : undefined,
       students: validStudents.map(s => ({
         name: s.name.trim(),
         minutes: parseInt(s.minutes),
         fee: calcFee(s),
         unpaid: s.unpaid || undefined,
         offIceFee: s.offIce && s.offIceFee ? parseInt(s.offIceFee) : undefined,
+        choreo: s.choreo || undefined,
       })),
       createdAt: Date.now(),
     }
@@ -338,7 +353,7 @@ export default function LessonInput() {
                 {/* 금액 미리보기 */}
                 {student.minutes && (
                   <div className="flex items-center justify-between">
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <label className="flex items-center gap-1 text-xs text-gray-500 cursor-pointer">
                         <input
                           type="checkbox"
@@ -366,6 +381,15 @@ export default function LessonInput() {
                         />
                         미납
                       </label>
+                      <label className="flex items-center gap-1 text-xs text-violet-500 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={student.choreo}
+                          onChange={e => updateStudent(i, 'choreo', e.target.checked)}
+                          className="rounded"
+                        />
+                        안무
+                      </label>
                     </div>
                     <span className="text-sm font-semibold text-emerald-600">
                       {formatKRW(calcFee(student))}
@@ -385,9 +409,10 @@ export default function LessonInput() {
               <div className="flex-1">
                 <label className="text-xs text-gray-400 mb-1 block">출장비</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={travelFee}
-                  onChange={e => setTravelFee(e.target.value)}
+                  onChange={e => setTravelFee(formatComma(e.target.value))}
                   placeholder="0"
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
                 />
@@ -395,9 +420,10 @@ export default function LessonInput() {
               <div className="flex-1">
                 <label className="text-xs text-gray-400 mb-1 block">숙소비</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={accommodationFee}
-                  onChange={e => setAccommodationFee(e.target.value)}
+                  onChange={e => setAccommodationFee(formatComma(e.target.value))}
                   placeholder="0"
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
                 />

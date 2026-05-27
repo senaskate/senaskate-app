@@ -33,6 +33,7 @@ export interface StudentLesson {
   fee: number           // 계산된 금액
   unpaid?: boolean
   offIceFee?: number    // 오프아이스 추가금액
+  choreo?: boolean      // 안무 여부
 }
 
 // ─── 안무 ─────────────────────────────────────────────────
