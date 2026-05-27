@@ -154,8 +154,8 @@ export default function DayView() {
               <div className="absolute right-0 top-12 z-20 flex flex-col gap-1.5 items-end">
                 {[
                   { type: 'lesson' as const, label: '레슨', color: '#10b981' },
-                  { type: 'choreo' as const, label: '안무', color: '#8b5cf6' },
-                  { type: 'personal' as const, label: '개인 일정', color: '#60a5fa' },
+                  { type: 'choreo' as const, label: '안무', color: '#10b981' },
+                  { type: 'personal' as const, label: '개인 일정', color: '#8b5cf6' },
                 ].map(({ type, label, color }) => (
                   <button
                     key={type}
@@ -215,7 +215,7 @@ export default function DayView() {
               {/* 세로 바 */}
               <div
                 className="w-1 rounded-full mx-3 flex-shrink-0 self-stretch"
-                style={{ backgroundColor: '#10b981', minHeight: 40 }}
+                style={{ backgroundColor: block.color, minHeight: 40 }}
               />
 
               {/* 제목 영역 */}
