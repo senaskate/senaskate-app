@@ -43,7 +43,6 @@ export default function TeacherPage() {
   }, {})
 
   const total = Object.values(studentTotals).reduce((a, b) => a + b, 0)
-  const showGrandTotal = activeTeacher?.name === '나희쌤'
 
   function prevMonth() {
     const d = new Date(year, month - 2, 1)
