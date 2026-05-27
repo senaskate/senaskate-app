@@ -256,12 +256,10 @@ export default function TeacherPage() {
                   <span className="text-base font-bold text-gray-900">{amt.toLocaleString()}</span>
                 </div>
               ))}
-              {showGrandTotal && (
-                <div className="flex justify-between px-3 py-3 bg-gray-50">
-                  <span className="text-base font-bold text-gray-800">합계</span>
-                  <span className="text-lg font-extrabold text-emerald-600">{formatKRW(total)}</span>
-                </div>
-              )}
+              <div className="flex justify-between px-3 py-3 bg-gray-50">
+                <span className="text-base font-bold text-gray-800">합계</span>
+                <span className="text-lg font-extrabold text-emerald-600">{formatKRW(total)}</span>
+              </div>
             </div>
           )}
         </div>
