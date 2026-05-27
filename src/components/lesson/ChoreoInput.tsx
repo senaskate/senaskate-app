@@ -86,7 +86,7 @@ export default function ChoreoInput() {
         <button onClick={handleSave} className="text-violet-600 font-semibold text-sm">저장</button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 space-y-4">
         {/* 신규 / 이어가기 탭 */}
         {existingChoreos.length > 0 && (
           <div className="flex bg-gray-100 rounded-xl p-1">

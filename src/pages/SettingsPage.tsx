@@ -183,7 +183,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto">
+    <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden">
       <div className="px-4 py-4 border-b border-gray-100">
         <h1 className="text-lg font-bold text-gray-800">설정</h1>
       </div>

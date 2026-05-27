@@ -17,6 +17,7 @@ export default function BottomNav({ active, onChange }: BottomNavProps) {
   return (
     <nav
       className="flex items-center border-t border-gray-100 bg-white flex-shrink-0"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       {TABS.map(({ id, icon: Icon, label }) => (
         <button

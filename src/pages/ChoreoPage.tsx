@@ -52,7 +52,7 @@ export default function ChoreoPage() {
       </div>
 
       {/* 목록 */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 space-y-3">
         {filtered.length === 0 ? (
           <div className="text-center py-12 text-gray-400 text-sm">안무 내역이 없습니다</div>
         ) : (

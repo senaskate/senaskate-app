@@ -191,7 +191,7 @@ export default function TeacherPage() {
       </div>
 
       {/* 내역 */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
         <div ref={printRef} className="px-4 py-4 space-y-4 bg-white">
           {/* 헤더 (캡처용) */}
           <div className="flex items-center justify-between">

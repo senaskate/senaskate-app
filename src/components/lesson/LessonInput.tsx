@@ -162,7 +162,7 @@ export default function LessonInput() {
         <button onClick={handleSave} className="text-emerald-600 font-semibold text-sm">저장</button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 space-y-4">
         {/* 날짜 + 시작시간 */}
         <div className="flex gap-3">
           <div className="flex-1">

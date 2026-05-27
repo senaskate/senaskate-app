@@ -57,7 +57,7 @@ export default function StatsPage() {
     (currentMonth.startsWith(String(year)) && !isCurrentMonthClosed ? monthTotal : 0)
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto">
+    <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden">
       {/* 월 헤더 */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
         <button onClick={prevMonth} className="p-1 rounded-full hover:bg-gray-100">

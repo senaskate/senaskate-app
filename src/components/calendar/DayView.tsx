@@ -192,7 +192,7 @@ export default function DayView() {
       <div className="mx-4 border-b border-gray-100 mb-1" />
 
       {/* 이벤트 목록 */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
         {timedBlocks.length === 0 && allDayBlocks.length === 0 ? (
           <div className="text-center py-16 text-gray-400 text-sm">일정이 없습니다</div>
         ) : timedBlocks.length === 0 ? null : (
