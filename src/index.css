@@ -29,6 +29,7 @@
     padding-top: env(safe-area-inset-top, 0px);
     box-sizing: border-box;
     overflow-x: hidden; /* 가로 스크롤 방지 */
+    overflow-y: hidden; /* 세로 스크롤/틈 방지 */
   }
   /* iOS 입력 줌 방지 */
   input[type="text"],

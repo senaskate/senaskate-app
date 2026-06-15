@@ -49,6 +49,7 @@ export default function LessonInput() {
   const [travelFee, setTravelFee] = useState('')
   const [accommodationFee, setAccommodationFee] = useState('')
   const [showStudentPicker, setShowStudentPicker] = useState<number | null>(null)
+  const [showCustomLocation, setShowCustomLocation] = useState(false)
 
   // 수정 모드 로드
   useEffect(() => {
@@ -59,6 +60,7 @@ export default function LessonInput() {
         setStartTime(lesson.startTime ?? '')
         setEndTime(lesson.endTime ?? '')
         setLocation(lesson.location)
+        if (!(LOCATIONS as readonly string[]).includes(lesson.location)) setShowCustomLocation(true)
         setTeacherId(lesson.teacherId)
         setLessonType(lesson.type)
         setStudents(lesson.students.map(s => ({
@@ -224,9 +226,9 @@ export default function LessonInput() {
             {LOCATIONS.map(loc => (
               <button
                 key={loc}
-                onClick={() => handleLocationChange(loc)}
+                onClick={() => { handleLocationChange(loc); setShowCustomLocation(false) }}
                 className={`py-2 rounded-xl text-sm font-medium border transition-colors ${
-                  location === loc
+                  !showCustomLocation && location === loc
                     ? 'bg-emerald-500 text-white border-emerald-500'
                     : 'bg-gray-50 text-gray-600 border-gray-200'
                 }`}
@@ -234,7 +236,27 @@ export default function LessonInput() {
                 {loc}
               </button>
             ))}
+            <button
+              onClick={() => { setShowCustomLocation(true); handleLocationChange('') }}
+              className={`py-2 rounded-xl text-sm font-medium border transition-colors ${
+                showCustomLocation
+                  ? 'bg-emerald-500 text-white border-emerald-500'
+                  : 'bg-gray-50 text-gray-600 border-gray-200'
+              }`}
+            >
+              + 위치 추가
+            </button>
           </div>
+          {showCustomLocation && (
+            <input
+              type="text"
+              value={location}
+              onChange={e => handleLocationChange(e.target.value)}
+              placeholder="위치를 입력하세요"
+              autoFocus
+              className="w-full mt-2 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
+            />
+          )}
         </div>
 
         {/* 선생님 */}
