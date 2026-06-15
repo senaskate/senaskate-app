@@ -8,6 +8,7 @@
   html, body {
     margin: 0;
     padding: 0;
+    height: 100%;
     overscroll-behavior: none;
     overflow: hidden;
     /* body 배경도 흰색으로 — #root 아래 틈이 생겨도 눈에 안 띄도록 */
@@ -21,6 +22,8 @@
   #root {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
+    height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     max-width: 430px;
