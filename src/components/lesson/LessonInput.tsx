@@ -185,34 +185,34 @@ export default function LessonInput() {
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 space-y-4">
         {/* 날짜 */}
-        <div>
+        <div className="min-w-0">
           <label className="text-xs text-gray-400 font-medium mb-1 block">날짜</label>
           <input
             type="date"
             value={date}
             onChange={e => setDate(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
+            className="w-full min-w-0 max-w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
           />
         </div>
 
         {/* 시작/종료 시간 */}
         <div className="flex gap-3">
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <label className="text-xs text-gray-400 font-medium mb-1 block">시작 시간</label>
             <input
               type="time"
               value={startTime}
               onChange={e => setStartTime(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
+              className="w-full min-w-0 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
             />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <label className="text-xs text-gray-400 font-medium mb-1 block">종료 시간</label>
             <input
               type="time"
               value={endTime}
               onChange={e => setEndTime(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
+              className="w-full min-w-0 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
             />
           </div>
         </div>

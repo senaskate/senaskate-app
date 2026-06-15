@@ -13,9 +13,18 @@ function latestSessionDate(c: ChoreoEntry): string {
 }
 
 export default function ChoreoPage() {
-  const { openInputModal } = useAppStore()
+  const { openInputModal, currentMonth } = useAppStore()
   const [filter, setFilter] = useState<'all' | 'active' | 'billed'>('all')
   const [sortBy, setSortBy] = useState<'recent' | 'teacher' | 'startMonth'>('recent')
+
+  async function markBilled(c: ChoreoEntry) {
+    await db.choreos.update(c.id, { billedMonth: currentMonth })
+  }
+
+  async function cancelBilled(c: ChoreoEntry) {
+    if (!confirm('청구완료를 취소할까요?')) return
+    await db.choreos.update(c.id, { billedMonth: null })
+  }
 
   const choreos = useLiveQuery(() => db.choreos.toArray().then(list => list.sort((a, b) => b.createdAt - a.createdAt)), []) ?? []
   const teachers = useLiveQuery(() => db.teachers.toArray(), []) ?? []
@@ -161,6 +170,25 @@ export default function ChoreoPage() {
                 {/* 이월 안내 */}
                 {!ended && !c.billedMonth && (
                   <p className="text-xs text-gray-400 mt-2">진행 중 — "끝" 처리 시 청구됩니다</p>
+                )}
+
+                {/* 청구하기 / 청구완료 */}
+                {ended && (
+                  c.billedMonth ? (
+                    <button
+                      onClick={e => { e.stopPropagation(); cancelBilled(c) }}
+                      className="w-full mt-3 bg-gray-100 text-gray-500 rounded-xl py-2 text-sm font-medium"
+                    >
+                      청구완료 · 취소
+                    </button>
+                  ) : (
+                    <button
+                      onClick={e => { e.stopPropagation(); markBilled(c) }}
+                      className="w-full mt-3 bg-violet-500 text-white rounded-xl py-2 text-sm font-medium"
+                    >
+                      청구하기
+                    </button>
+                  )
                 )}
               </div>
             )

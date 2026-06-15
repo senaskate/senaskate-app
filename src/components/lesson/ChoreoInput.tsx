@@ -36,6 +36,7 @@ export default function ChoreoInput() {
   // 수정 모드: 기존 안무 + 회차 목록
   const [loadedChoreo, setLoadedChoreo] = useState<ChoreoEntry | null>(null)
   const [sessions, setSessions] = useState<ChoreoSession[]>([])
+  const [showAddSession, setShowAddSession] = useState(false)
 
   useEffect(() => {
     if (editId) {
@@ -71,6 +72,7 @@ export default function ChoreoInput() {
     }
     setSessions([...sessions, newSession])
     setSessionNote('')
+    setShowAddSession(false)
   }
 
   async function handleSave() {
@@ -231,14 +233,14 @@ export default function ChoreoInput() {
                       type="date"
                       value={s.date}
                       onChange={e => updateSession(idx, 'date', e.target.value)}
-                      className="flex-1 border border-gray-200 bg-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-violet-400"
+                      className="flex-1 min-w-0 border border-gray-200 bg-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-violet-400"
                     />
                     <input
                       type="text"
                       value={s.note ?? ''}
                       onChange={e => updateSession(idx, 'note', e.target.value)}
                       placeholder="메모"
-                      className="flex-1 border border-gray-200 bg-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-violet-400"
+                      className="flex-1 min-w-0 border border-gray-200 bg-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-violet-400"
                     />
                     <button onClick={() => removeSession(idx)} className="text-gray-300 hover:text-red-400 flex-shrink-0">
                       <Trash2 size={14} />
@@ -253,50 +255,69 @@ export default function ChoreoInput() {
 
             {/* 회차 추가 */}
             <div>
-              <label className="text-xs text-gray-400 font-medium mb-2 block">회차 추가</label>
-              <div className="flex gap-2 flex-wrap mb-2">
-                {['1','2','3','4','5','6','7','8','end'].map(n => (
-                  <button
-                    key={n}
-                    onClick={() => setSessionNum(n)}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
-                      sessionNum === n
-                        ? n === 'end' ? 'bg-red-500 text-white border-red-500' : 'bg-violet-500 text-white border-violet-500'
-                        : 'bg-gray-50 text-gray-600 border-gray-200'
-                    }`}
-                  >
-                    {n === 'end' ? '끝' : `${n}회`}
-                  </button>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="date"
-                  value={date}
-                  onChange={e => setDate(e.target.value)}
-                  className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-violet-400"
-                />
-                <input
-                  type="text"
-                  value={sessionNote}
-                  onChange={e => setSessionNote(e.target.value)}
-                  placeholder="메모 (선택)"
-                  className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-violet-400"
-                />
-              </div>
-              <button
-                onClick={addSessionToList}
-                className="w-full mt-2 bg-violet-50 text-violet-600 rounded-xl py-2 text-sm font-medium border border-violet-200"
-              >
-                회차 추가
-              </button>
-              {isEnd && (
-                <div className="mt-3 bg-violet-50 border border-violet-200 rounded-xl p-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-violet-700 font-medium">안무비 청구 예정</span>
-                    <span className="text-lg font-bold text-violet-600">{formatKRW(prices.choreo[level])}</span>
+              {!showAddSession ? (
+                <button
+                  onClick={() => setShowAddSession(true)}
+                  className="w-full bg-violet-50 text-violet-600 rounded-xl py-2.5 text-sm font-medium border border-violet-200"
+                >
+                  + 회차 추가
+                </button>
+              ) : (
+                <div>
+                  <label className="text-xs text-gray-400 font-medium mb-2 block">회차 추가</label>
+                  <div className="flex gap-2 flex-wrap mb-2">
+                    {['1','2','3','4','5','6','7','8','end'].map(n => (
+                      <button
+                        key={n}
+                        onClick={() => setSessionNum(n)}
+                        className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                          sessionNum === n
+                            ? n === 'end' ? 'bg-red-500 text-white border-red-500' : 'bg-violet-500 text-white border-violet-500'
+                            : 'bg-gray-50 text-gray-600 border-gray-200'
+                        }`}
+                      >
+                        {n === 'end' ? '끝' : `${n}회`}
+                      </button>
+                    ))}
                   </div>
-                  <p className="text-xs text-violet-500 mt-1">이번 달 정산에 포함됩니다</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="date"
+                      value={date}
+                      onChange={e => setDate(e.target.value)}
+                      className="flex-1 min-w-0 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-violet-400"
+                    />
+                    <input
+                      type="text"
+                      value={sessionNote}
+                      onChange={e => setSessionNote(e.target.value)}
+                      placeholder="메모 (선택)"
+                      className="flex-1 min-w-0 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-violet-400"
+                    />
+                  </div>
+                  {isEnd && (
+                    <div className="mt-3 bg-violet-50 border border-violet-200 rounded-xl p-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-violet-700 font-medium">안무비 청구 예정</span>
+                        <span className="text-lg font-bold text-violet-600">{formatKRW(prices.choreo[level])}</span>
+                      </div>
+                      <p className="text-xs text-violet-500 mt-1">이번 달 정산에 포함됩니다</p>
+                    </div>
+                  )}
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => setShowAddSession(false)}
+                      className="flex-1 bg-gray-50 text-gray-500 rounded-xl py-2 text-sm font-medium border border-gray-200"
+                    >
+                      취소
+                    </button>
+                    <button
+                      onClick={addSessionToList}
+                      className="flex-1 bg-violet-500 text-white rounded-xl py-2 text-sm font-medium"
+                    >
+                      추가
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
