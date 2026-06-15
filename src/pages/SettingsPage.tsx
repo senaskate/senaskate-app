@@ -33,7 +33,7 @@ export default function SettingsPage() {
   const billableChoreos = getBillableChoreos(allChoreos, currentMonth)
 
   const lessonTotal = lessons.reduce((sum, l) =>
-    sum + l.students.reduce((s, st) => s + st.fee + (st.offIceFee ?? 0), 0), 0)
+    sum + l.students.reduce((s, st) => s + st.fee, 0), 0)
   const choreoTotal = billableChoreos.reduce((sum, c) => sum + c.totalFee, 0)
 
   // ─── 선생님/학생 관리 상태 ──────────────────────────────
@@ -136,7 +136,7 @@ export default function SettingsPage() {
               <td style="padding:6px 8px;color:#6b7280">${i === 0 ? l.location : ''}</td>
               <td style="padding:6px 8px;font-weight:500">${s.name}${s.unpaid ? ' (미납)' : ''}</td>
               <td style="padding:6px 8px;text-align:right;color:#6b7280">${s.minutes}분</td>
-              <td style="padding:6px 8px;text-align:right;font-weight:600">${(s.fee + (s.offIceFee ?? 0)).toLocaleString()}</td>
+              <td style="padding:6px 8px;text-align:right;font-weight:600">${s.fee.toLocaleString()}</td>
             </tr>`)
           ).join('')}
         </tbody>

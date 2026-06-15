@@ -5,7 +5,7 @@ import { useAppStore } from '../../stores/appStore'
 import { generateId, formatKRW } from '../../rules/utils'
 import { getTeacherByLocation } from '../../rules/teacherAssignment'
 import { calcLessonFee, needsSemiConfirm } from '../../rules/pricing'
-import { DEFAULT_PRICES, LOCATIONS, type LessonType, type TeacherId } from '../../types'
+import { DEFAULT_PRICES, LOCATIONS, CHOREO_LABELS, type LessonType, type TeacherId, type ChoreoLevel } from '../../types'
 import { X, Plus, Trash2 } from 'lucide-react'
 
 interface StudentRow {
@@ -15,6 +15,7 @@ interface StudentRow {
   offIceFee: string
   unpaid: boolean
   choreo: boolean
+  choreoLevel: ChoreoLevel
 }
 
 function formatComma(v: string): string {
@@ -37,12 +38,13 @@ export default function LessonInput() {
 
   const [date, setDate] = useState(prefillDate)
   const [startTime, setStartTime] = useState('')
+  const [endTime, setEndTime] = useState('')
   const [location, setLocation] = useState('')
   const [teacherId, setTeacherId] = useState<TeacherId | ''>('')
   const [teacherLocked, setTeacherLocked] = useState(false)
   const [lessonType, setLessonType] = useState<LessonType>('individual')
   const [semiConfirmShown, setSemiConfirmShown] = useState(false)
-  const [students, setStudents] = useState<StudentRow[]>([{ name: '', minutes: '', offIce: false, offIceFee: '', unpaid: false, choreo: false }])
+  const [students, setStudents] = useState<StudentRow[]>([{ name: '', minutes: '', offIce: false, offIceFee: '', unpaid: false, choreo: false, choreoLevel: 'basic_novice_fs' }])
   const [note, setNote] = useState('')
   const [travelFee, setTravelFee] = useState('')
   const [accommodationFee, setAccommodationFee] = useState('')
@@ -55,6 +57,7 @@ export default function LessonInput() {
         if (!lesson) return
         setDate(lesson.date)
         setStartTime(lesson.startTime ?? '')
+        setEndTime(lesson.endTime ?? '')
         setLocation(lesson.location)
         setTeacherId(lesson.teacherId)
         setLessonType(lesson.type)
@@ -65,6 +68,7 @@ export default function LessonInput() {
           offIceFee: s.offIceFee ? String(s.offIceFee) : '',
           unpaid: !!s.unpaid,
           choreo: !!s.choreo,
+          choreoLevel: s.choreoLevel ?? 'basic_novice_fs',
         })))
         setTravelFee(lesson.travelFee ? lesson.travelFee.toLocaleString('ko-KR') : '')
         setAccommodationFee(lesson.accommodationFee ? lesson.accommodationFee.toLocaleString('ko-KR') : '')
@@ -94,7 +98,7 @@ export default function LessonInput() {
   }
 
   function addStudent() {
-    const next = [...students, { name: '', minutes: '', offIce: false, offIceFee: '', unpaid: false, choreo: false }]
+    const next = [...students, { name: '', minutes: '', offIce: false, offIceFee: '', unpaid: false, choreo: false, choreoLevel: 'basic_novice_fs' as ChoreoLevel }]
     setStudents(next)
     handleStudentCountChange(next)
   }
@@ -117,24 +121,25 @@ export default function LessonInput() {
 
   // 실시간 금액 계산
   function calcFee(row: StudentRow): number {
+    const offIce = row.offIce ? (parseInt(row.offIceFee) || 0) : 0
+    if (row.choreo) return prices.choreo[row.choreoLevel] + offIce
     const min = parseInt(row.minutes) || 0
     if (min === 0) return 0
-    const base = calcLessonFee(min, lessonType, prices)
-    const offIce = row.offIce ? (parseInt(row.offIceFee) || 0) : 0
-    return base + offIce
+    return calcLessonFee(min, lessonType, prices) + offIce
   }
 
   const totalFee = students.reduce((sum, s) => sum + calcFee(s), 0)
     + parseComma(travelFee) + parseComma(accommodationFee)
 
   async function handleSave() {
-    const validStudents = students.filter(s => s.name.trim() && s.minutes.trim())
+    const validStudents = students.filter(s => s.name.trim() && (s.minutes.trim() || s.choreo))
     if (!date || !location || !teacherId) return
 
     const lesson = {
       id: editId ?? generateId(),
       date,
       startTime: startTime || undefined,
+      endTime: endTime || undefined,
       teacherId: teacherId as TeacherId,
       location,
       type: lessonType,
@@ -143,11 +148,12 @@ export default function LessonInput() {
       accommodationFee: accommodationFee ? parseComma(accommodationFee) : undefined,
       students: validStudents.map(s => ({
         name: s.name.trim(),
-        minutes: parseInt(s.minutes),
+        minutes: parseInt(s.minutes) || 0,
         fee: calcFee(s),
         unpaid: s.unpaid || undefined,
         offIceFee: s.offIce && s.offIceFee ? parseInt(s.offIceFee) : undefined,
         choreo: s.choreo || undefined,
+        choreoLevel: s.choreo ? s.choreoLevel : undefined,
       })),
       createdAt: Date.now(),
     }
@@ -178,23 +184,34 @@ export default function LessonInput() {
       </div>
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 space-y-4">
-        {/* 날짜 + 시작시간 */}
+        {/* 날짜 */}
+        <div>
+          <label className="text-xs text-gray-400 font-medium mb-1 block">날짜</label>
+          <input
+            type="date"
+            value={date}
+            onChange={e => setDate(e.target.value)}
+            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
+          />
+        </div>
+
+        {/* 시작/종료 시간 */}
         <div className="flex gap-3">
           <div className="flex-1">
-            <label className="text-xs text-gray-400 font-medium mb-1 block">날짜</label>
-            <input
-              type="date"
-              value={date}
-              onChange={e => setDate(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
-            />
-          </div>
-          <div className="w-28">
             <label className="text-xs text-gray-400 font-medium mb-1 block">시작 시간</label>
             <input
               type="time"
               value={startTime}
               onChange={e => setStartTime(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
+            />
+          </div>
+          <div className="flex-1">
+            <label className="text-xs text-gray-400 font-medium mb-1 block">종료 시간</label>
+            <input
+              type="time"
+              value={endTime}
+              onChange={e => setEndTime(e.target.value)}
               className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
             />
           </div>
@@ -351,49 +368,70 @@ export default function LessonInput() {
                 </div>
 
                 {/* 금액 미리보기 */}
-                {student.minutes && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-wrap gap-2">
-                      <label className="flex items-center gap-1 text-xs text-gray-500 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={student.offIce}
-                          onChange={e => updateStudent(i, 'offIce', e.target.checked)}
-                          className="rounded"
-                        />
-                        오프아이스
-                      </label>
-                      {student.offIce && (
-                        <input
-                          type="number"
-                          value={student.offIceFee}
-                          onChange={e => updateStudent(i, 'offIceFee', e.target.value)}
-                          placeholder="금액"
-                          className="w-20 border border-gray-200 bg-white rounded px-2 py-0.5 text-xs focus:outline-none"
-                        />
-                      )}
-                      <label className="flex items-center gap-1 text-xs text-red-400 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={student.unpaid}
-                          onChange={e => updateStudent(i, 'unpaid', e.target.checked)}
-                          className="rounded"
-                        />
-                        미납
-                      </label>
-                      <label className="flex items-center gap-1 text-xs text-violet-500 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={student.choreo}
-                          onChange={e => updateStudent(i, 'choreo', e.target.checked)}
-                          className="rounded"
-                        />
-                        안무
-                      </label>
+                {(student.minutes || student.choreo) && (
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap gap-2">
+                        <label className="flex items-center gap-1 text-xs text-gray-500 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={student.offIce}
+                            onChange={e => updateStudent(i, 'offIce', e.target.checked)}
+                            className="rounded"
+                          />
+                          오프아이스
+                        </label>
+                        {student.offIce && (
+                          <input
+                            type="number"
+                            value={student.offIceFee}
+                            onChange={e => updateStudent(i, 'offIceFee', e.target.value)}
+                            placeholder="금액"
+                            className="w-20 border border-gray-200 bg-white rounded px-2 py-0.5 text-xs focus:outline-none"
+                          />
+                        )}
+                        <label className="flex items-center gap-1 text-xs text-red-400 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={student.unpaid}
+                            onChange={e => updateStudent(i, 'unpaid', e.target.checked)}
+                            className="rounded"
+                          />
+                          미납
+                        </label>
+                        <label className="flex items-center gap-1 text-xs text-violet-500 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={student.choreo}
+                            onChange={e => updateStudent(i, 'choreo', e.target.checked)}
+                            className="rounded"
+                          />
+                          안무
+                        </label>
+                      </div>
+                      <span className="text-sm font-semibold text-emerald-600">
+                        {formatKRW(calcFee(student))}
+                      </span>
                     </div>
-                    <span className="text-sm font-semibold text-emerald-600">
-                      {formatKRW(calcFee(student))}
-                    </span>
+
+                    {/* 안무 레벨 선택 */}
+                    {student.choreo && (
+                      <div className="flex gap-2 overflow-x-auto mt-2 pb-1 -mx-1 px-1">
+                        {Object.entries(CHOREO_LABELS).map(([key, label]) => (
+                          <button
+                            key={key}
+                            onClick={() => updateStudent(i, 'choreoLevel', key)}
+                            className={`flex-shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-medium border whitespace-nowrap transition-colors ${
+                              student.choreoLevel === key
+                                ? 'bg-violet-500 text-white border-violet-500'
+                                : 'bg-white text-gray-500 border-gray-200'
+                            }`}
+                          >
+                            {label} · {formatKRW(prices.choreo[key as ChoreoLevel])}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

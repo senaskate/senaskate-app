@@ -37,7 +37,7 @@ export default function TeacherPage() {
   // 학생별 합계
   const studentTotals = teacherLessons.reduce<Record<string, number>>((acc, l) => {
     for (const s of l.students) {
-      acc[s.name] = (acc[s.name] ?? 0) + s.fee + (s.offIceFee ?? 0)
+      acc[s.name] = (acc[s.name] ?? 0) + s.fee
     }
     return acc
   }, {})
@@ -73,7 +73,7 @@ export default function TeacherPage() {
                 <td style="padding:4px 8px;font-size:11px;color:#9ca3af">${si === 0 ? l.location : ''}</td>
                 <td style="padding:4px 8px;font-size:11px;color:#9ca3af">${s.name}${s.unpaid ? ' (미납)' : ''}</td>
                 <td style="padding:4px 8px;font-size:11px;text-align:right;color:#9ca3af">${s.minutes}분</td>
-                <td style="padding:4px 8px;font-size:11px;text-align:right;color:#9ca3af">${(s.fee + (s.offIceFee ?? 0)).toLocaleString()}</td>
+                <td style="padding:4px 8px;font-size:11px;text-align:right;color:#9ca3af">${s.fee.toLocaleString()}</td>
               </tr>`
             })
           )
@@ -233,7 +233,7 @@ export default function TeacherPage() {
                               {s.minutes !== 0 ? `${s.minutes}분` : '-'}
                             </td>
                             <td className="px-3 py-1.5 text-right text-xs text-gray-400">
-                              {(s.fee + (s.offIceFee ?? 0)).toLocaleString()}
+                              {s.fee.toLocaleString()}
                             </td>
                           </tr>
                         )

@@ -34,6 +34,7 @@ export interface StudentLesson {
   unpaid?: boolean
   offIceFee?: number    // 오프아이스 추가금액
   choreo?: boolean      // 안무 여부
+  choreoLevel?: ChoreoLevel  // 안무 단가 레벨 (choreo=true일 때)
 }
 
 // ─── 안무 ─────────────────────────────────────────────────
@@ -56,6 +57,7 @@ export interface ChoreoEntry {
   totalFee: number
   billedMonth: string | null  // YYYY-MM, null = 미청구
   startMonth: string          // YYYY-MM
+  location?: string           // 장소 / 링크
   createdAt: number
 }
 

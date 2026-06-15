@@ -53,7 +53,7 @@ export default function StatsPage() {
       // 미마감: 실시간 계산
       const mLessons = allLessons.filter(l => l.date.startsWith(yyyymm))
       const lessonTotal = mLessons.reduce((sum, l) =>
-        sum + l.students.reduce((s, st) => s + st.fee + (st.offIceFee ?? 0), 0), 0)
+        sum + l.students.reduce((s, st) => s + st.fee, 0), 0)
       const billable = getBillableChoreos(allChoreos, yyyymm)
       const choreoTotal = billable.reduce((s, c) => s + c.totalFee, 0)
 
@@ -82,7 +82,7 @@ export default function StatsPage() {
     return teachers.map(t => {
       const tLessons = mLessons.filter(l => l.teacherId === t.id)
       const total = tLessons.reduce((sum, l) =>
-        sum + l.students.reduce((s, st) => s + st.fee + (st.offIceFee ?? 0), 0), 0)
+        sum + l.students.reduce((s, st) => s + st.fee, 0), 0)
       return { teacher: t, total }
     }).filter(t => t.total > 0)
   }, [selected, allLessons, teachers])
