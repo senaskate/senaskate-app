@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db'
 import { useAppStore } from '../../stores/appStore'
-import { generateId, formatKRW } from '../../rules/utils'
+import { generateId, formatKRW, formatComma, parseComma } from '../../rules/utils'
 import { getTeacherByLocation } from '../../rules/teacherAssignment'
 import { calcLessonFee, needsSemiConfirm } from '../../rules/pricing'
 import { DEFAULT_PRICES, LOCATIONS, CHOREO_LABELS, type LessonType, type TeacherId, type ChoreoLevel } from '../../types'
@@ -18,20 +18,12 @@ interface StudentRow {
   choreoLevel: ChoreoLevel
 }
 
-function formatComma(v: string): string {
-  const num = v.replace(/\D/g, '')
-  if (!num) return ''
-  return parseInt(num, 10).toLocaleString('ko-KR')
-}
-function parseComma(v: string): number {
-  return parseInt(v.replace(/,/g, ''), 10) || 0
-}
-
 export default function LessonInput() {
   const { inputModal, closeInputModal, selectedDate } = useAppStore()
   const teachers = useLiveQuery(() => db.teachers.toArray(), []) ?? []
   const config = useLiveQuery(() => db.config.get('default'), [])
   const prices = config ?? DEFAULT_PRICES
+  const locationList: readonly string[] = prices.locations ?? LOCATIONS
 
   const prefillDate = inputModal.prefillDate ?? selectedDate
   const editId = inputModal.editId
@@ -60,7 +52,7 @@ export default function LessonInput() {
         setStartTime(lesson.startTime ?? '')
         setEndTime(lesson.endTime ?? '')
         setLocation(lesson.location)
-        if (!(LOCATIONS as readonly string[]).includes(lesson.location)) setShowCustomLocation(true)
+        if (!locationList.includes(lesson.location)) setShowCustomLocation(true)
         setTeacherId(lesson.teacherId)
         setLessonType(lesson.type)
         setStudents(lesson.students.map(s => ({
@@ -223,7 +215,7 @@ export default function LessonInput() {
         <div>
           <label className="text-xs text-gray-400 font-medium mb-1 block">위치</label>
           <div className="grid grid-cols-3 gap-2">
-            {LOCATIONS.map(loc => (
+            {locationList.map(loc => (
               <button
                 key={loc}
                 onClick={() => { handleLocationChange(loc); setShowCustomLocation(false) }}

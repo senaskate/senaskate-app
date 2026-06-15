@@ -27,6 +27,16 @@ export function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
+export function formatComma(v: string): string {
+  const num = v.replace(/\D/g, '')
+  if (!num) return ''
+  return parseInt(num, 10).toLocaleString('ko-KR')
+}
+
+export function parseComma(v: string): number {
+  return parseInt(v.replace(/,/g, ''), 10) || 0
+}
+
 export const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 export const MONTH_NAMES = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월']
 

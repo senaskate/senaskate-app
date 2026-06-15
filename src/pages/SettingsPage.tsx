@@ -1,13 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
-import { useAppStore } from '../stores/appStore'
-import { DEFAULT_PRICES, CHOREO_LABELS, type ChoreoLevel } from '../types'
-import { formatKRW, generateId } from '../rules/utils'
-import { getBillableChoreos } from '../rules/choreo'
-import { Lock, Unlock, Download, Plus, Pencil, Check, X, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
-import html2canvas from 'html2canvas'
-import JSZip from 'jszip'
+import { DEFAULT_PRICES, CHOREO_LABELS, LOCATIONS, type ChoreoLevel } from '../types'
+import { generateId, formatComma, parseComma } from '../rules/utils'
+import { Plus, Pencil, Check, X, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 
 const TEACHER_COLORS = [
   '#10b981', '#3b82f6', '#f59e0b', '#ef4444',
@@ -16,25 +12,12 @@ const TEACHER_COLORS = [
 ]
 
 export default function SettingsPage() {
-  const { currentMonth } = useAppStore()
-  const [year, month] = currentMonth.split('-').map(Number)
-  const [activeTab, setActiveTab] = useState<'close' | 'teachers' | 'prices'>('close')
+  const [activeTab, setActiveTab] = useState<'members' | 'locations' | 'prices'>('members')
 
   const teachers = useLiveQuery(() => db.teachers.toArray(), []) ?? []
   const config = useLiveQuery(() => db.config.get('default'), [])
   const prices = config ?? DEFAULT_PRICES
-  const monthCloses = useLiveQuery(() => db.monthClose.toArray(), []) ?? []
-  const isClosed = monthCloses.some(c => c.month === currentMonth)
-
-  const lessons = useLiveQuery(() =>
-    db.lessons.where('date').between(`${currentMonth}-01`, `${currentMonth}-31`, true, true).toArray()
-  , [currentMonth]) ?? []
-  const allChoreos = useLiveQuery(() => db.choreos.toArray(), []) ?? []
-  const billableChoreos = getBillableChoreos(allChoreos, currentMonth)
-
-  const lessonTotal = lessons.reduce((sum, l) =>
-    sum + l.students.reduce((s, st) => s + st.fee, 0), 0)
-  const choreoTotal = billableChoreos.reduce((sum, c) => sum + c.totalFee, 0)
+  const locations = prices.locations ?? [...LOCATIONS]
 
   // ─── 선생님/학생 관리 상태 ──────────────────────────────
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -93,104 +76,58 @@ export default function SettingsPage() {
     if (expandedId === id) setExpandedId(null)
   }
 
-  // ─── 월 마감 ───────────────────────────────────────────
-  async function handleCloseMonth() {
-    if (isClosed) {
-      if (!confirm('마감을 취소할까요?')) return
-      await db.monthClose.where('month').equals(currentMonth).delete()
-      return
-    }
-    if (!confirm(`${year}년 ${month}월을 마감할까요? 안무 청구가 확정됩니다.`)) return
-    for (const c of billableChoreos) {
-      await db.choreos.update(c.id, { billedMonth: currentMonth })
-    }
-    await db.monthClose.add({
-      id: generateId(),
-      month: currentMonth,
-      closedAt: Date.now(),
-      lessonTotal,
-      choreoTotal,
-      grandTotal: lessonTotal + choreoTotal,
+  // ─── 위치 관리 ──────────────────────────────────────────
+  const [newLocationText, setNewLocationText] = useState('')
+
+  async function addLocation() {
+    const name = newLocationText.trim()
+    if (!name || locations.includes(name)) return
+    await db.config.put({ ...prices, id: 'default', locations: [...locations, name] })
+    setNewLocationText('')
+  }
+
+  async function removeLocation(name: string) {
+    await db.config.put({ ...prices, id: 'default', locations: locations.filter(l => l !== name) })
+  }
+
+  // ─── 단가 관리 ──────────────────────────────────────────
+  const [individual, setIndividual] = useState(formatComma(String(DEFAULT_PRICES.individual)))
+  const [semi, setSemi] = useState(formatComma(String(DEFAULT_PRICES.semi)))
+  const [group, setGroup] = useState(formatComma(String(DEFAULT_PRICES.group)))
+  const [choreoPrices, setChoreoPrices] = useState<Record<ChoreoLevel, string>>(
+    Object.fromEntries(Object.entries(DEFAULT_PRICES.choreo).map(([k, v]) => [k, formatComma(String(v))])) as Record<ChoreoLevel, string>
+  )
+
+  useEffect(() => {
+    if (!config) return
+    setIndividual(formatComma(String(config.individual)))
+    setSemi(formatComma(String(config.semi)))
+    setGroup(formatComma(String(config.group)))
+    setChoreoPrices(Object.fromEntries(Object.entries(config.choreo).map(([k, v]) => [k, formatComma(String(v))])) as Record<ChoreoLevel, string>)
+  }, [config])
+
+  async function savePrices() {
+    await db.config.put({
+      ...prices,
+      id: 'default',
+      individual: parseComma(individual),
+      semi: parseComma(semi),
+      group: parseComma(group),
+      choreo: Object.fromEntries(
+        (Object.keys(CHOREO_LABELS) as ChoreoLevel[]).map(k => [k, parseComma(choreoPrices[k] ?? '0')])
+      ) as Record<ChoreoLevel, number>,
     })
-  }
-
-  async function renderTeacherCanvas(teacher: typeof teachers[0]) {
-    const tLessons = lessons.filter(l => l.teacherId === teacher.id)
-    if (tLessons.length === 0) return null
-    const div = document.createElement('div')
-    div.style.cssText = 'position:fixed;top:-9999px;left:-9999px;background:white;width:400px;padding:20px;font-family:sans-serif;'
-    div.innerHTML = `
-      <h2 style="font-size:16px;font-weight:bold;margin-bottom:12px;color:#1a1a1a">${teacher.name} · ${year}년 ${month}월</h2>
-      <table style="width:100%;border-collapse:collapse;font-size:13px;">
-        <thead><tr style="background:#f9fafb">
-          <th style="padding:8px;text-align:left;border-bottom:1px solid #e5e7eb">날짜</th>
-          <th style="padding:8px;text-align:left;border-bottom:1px solid #e5e7eb">장소</th>
-          <th style="padding:8px;text-align:left;border-bottom:1px solid #e5e7eb">이름</th>
-          <th style="padding:8px;text-align:right;border-bottom:1px solid #e5e7eb">분</th>
-          <th style="padding:8px;text-align:right;border-bottom:1px solid #e5e7eb">금액</th>
-        </tr></thead>
-        <tbody>
-          ${tLessons.sort((a, b) => a.date.localeCompare(b.date)).flatMap(l =>
-            l.students.map((s, i) => `<tr style="border-bottom:1px solid #f3f4f6">
-              <td style="padding:6px 8px;color:#6b7280">${i === 0 ? l.date.slice(5).replace('-', '/') : ''}</td>
-              <td style="padding:6px 8px;color:#6b7280">${i === 0 ? l.location : ''}</td>
-              <td style="padding:6px 8px;font-weight:500">${s.name}${s.unpaid ? ' (미납)' : ''}</td>
-              <td style="padding:6px 8px;text-align:right;color:#6b7280">${s.minutes}분</td>
-              <td style="padding:6px 8px;text-align:right;font-weight:600">${s.fee.toLocaleString()}</td>
-            </tr>`)
-          ).join('')}
-        </tbody>
-      </table>
-    `
-    document.body.appendChild(div)
-    const canvas = await html2canvas(div, { scale: 2, backgroundColor: '#ffffff' })
-    document.body.removeChild(div)
-    return { canvas, name: teacher.name }
-  }
-
-  async function handleBulkDownload() {
-    const results = (await Promise.all(teachers.map(t => renderTeacherCanvas(t)))).filter(Boolean) as { canvas: HTMLCanvasElement; name: string }[]
-    if (results.length === 0) return
-
-    // iOS: Web Share API로 모든 이미지 공유 — canShare 체크 없이 바로 시도
-    if (typeof navigator.share === 'function') {
-      try {
-        const files = await Promise.all(
-          results.map(async ({ canvas, name }) => {
-            const blob = await new Promise<Blob>(res => canvas.toBlob(b => res(b!), 'image/png'))
-            return new File([blob], `${currentMonth}_${name}.png`, { type: 'image/png' })
-          })
-        )
-        await navigator.share({ files, title: `${currentMonth} 레슨비` })
-        return
-      } catch (e) {
-        if ((e as Error).name === 'AbortError') return
-        // share 실패 시 fallback으로 내려감
-      }
-    }
-
-    // 일반 브라우저: ZIP 다운로드
-    const zip = new JSZip()
-    for (const { canvas, name } of results) {
-      const blob = await new Promise<Blob>(res => canvas.toBlob(b => res(b!), 'image/png'))
-      zip.file(`${currentMonth}_${name}.png`, blob)
-    }
-    const content = await zip.generateAsync({ type: 'blob' })
-    const link = document.createElement('a')
-    link.download = `${currentMonth}_레슨비_전체.zip`
-    link.href = URL.createObjectURL(content)
-    link.click()
   }
 
   return (
     <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden">
       <div className="px-4 py-4 border-b border-gray-100">
-        <h1 className="text-lg font-bold text-gray-800">설정</h1>
+        <h1 className="text-lg font-bold text-gray-800">회원관리</h1>
       </div>
 
       {/* 탭 */}
       <div className="flex border-b border-gray-100">
-        {(['close', 'teachers', 'prices'] as const).map(tab => (
+        {(['members', 'locations', 'prices'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -198,58 +135,15 @@ export default function SettingsPage() {
               activeTab === tab ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-gray-500'
             }`}
           >
-            {tab === 'close' ? '월 마감' : tab === 'teachers' ? '선생님/학생' : '단가'}
+            {tab === 'members' ? '선생님/학생' : tab === 'locations' ? '위치' : '단가'}
           </button>
         ))}
       </div>
 
       <div className="px-4 py-4 space-y-4">
 
-        {/* ── 월 마감 탭 ──────────────────────────────── */}
-        {activeTab === 'close' && (
-          <>
-            <div className={`rounded-2xl p-4 border ${isClosed ? 'bg-gray-50 border-gray-200' : 'bg-amber-50 border-amber-200'}`}>
-              <div className="flex items-center gap-2 mb-2">
-                {isClosed ? <Lock size={18} className="text-gray-500" /> : <Unlock size={18} className="text-amber-600" />}
-                <span className="font-semibold text-sm text-gray-800">
-                  {year}년 {month}월 {isClosed ? '마감됨' : '정산 예정'}
-                </span>
-              </div>
-              <div className="space-y-1 text-sm text-gray-600">
-                <div className="flex justify-between">
-                  <span>레슨 합계</span>
-                  <span className="font-medium">{formatKRW(lessonTotal)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>안무 합계 ({billableChoreos.length}건)</span>
-                  <span className="font-medium">{formatKRW(choreoTotal)}</span>
-                </div>
-                <div className="flex justify-between font-bold text-gray-800 pt-1 border-t border-gray-200 mt-1">
-                  <span>총계</span>
-                  <span className="text-emerald-600">{formatKRW(lessonTotal + choreoTotal)}</span>
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={handleCloseMonth}
-              className={`w-full py-3.5 rounded-xl font-semibold text-sm ${
-                isClosed ? 'bg-gray-200 text-gray-600' : 'bg-emerald-500 text-white'
-              }`}
-            >
-              {isClosed ? '마감 취소' : `${month}월 마감 확정`}
-            </button>
-            <button
-              onClick={handleBulkDownload}
-              className="w-full flex items-center justify-center gap-2 bg-gray-800 text-white rounded-xl py-3.5 text-sm font-medium"
-            >
-              <Download size={16} />
-              선생님별 이미지 전체 다운로드 (ZIP)
-            </button>
-          </>
-        )}
-
         {/* ── 선생님/학생 탭 ────────────────────────── */}
-        {activeTab === 'teachers' && (
+        {activeTab === 'members' && (
           <div className="space-y-3">
             {/* 선생님 추가 버튼 */}
             {!addingTeacher ? (
@@ -428,31 +322,120 @@ export default function SettingsPage() {
           </div>
         )}
 
+        {/* ── 위치 탭 ─────────────────────────────── */}
+        {activeTab === 'locations' && (
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-1.5 min-h-[28px]">
+              {locations.length === 0 ? (
+                <span className="text-xs text-gray-400">위치가 없습니다</span>
+              ) : (
+                locations.map(loc => (
+                  <span
+                    key={loc}
+                    className="flex items-center gap-1 bg-gray-100 rounded-full px-2.5 py-1 text-xs text-gray-700"
+                  >
+                    {loc}
+                    <button
+                      onClick={() => removeLocation(loc)}
+                      className="text-gray-400 hover:text-red-500 ml-0.5"
+                    >
+                      <X size={11} />
+                    </button>
+                  </span>
+                ))
+              )}
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="위치 이름 추가"
+                value={newLocationText}
+                onChange={e => setNewLocationText(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addLocation()}
+                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400"
+              />
+              <button
+                onClick={addLocation}
+                className="px-3 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ── 단가 탭 ─────────────────────────────── */}
         {activeTab === 'prices' && (
           <div className="space-y-3">
             <div className="border border-gray-200 rounded-xl overflow-hidden">
               <div className="bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-500 border-b border-gray-200">레슨 단가 (원/분)</div>
-              {[
-                ['개인 (1인)', prices.individual],
-                ['세미 (2-3인)', prices.semi],
-                ['단체 (4인+)', prices.group],
-              ].map(([label, value]) => (
-                <div key={String(label)} className="flex justify-between px-3 py-3 border-b border-gray-100 last:border-0">
-                  <span className="text-sm text-gray-700">{label}</span>
-                  <span className="text-sm font-semibold text-gray-800">{Number(value).toLocaleString()}원/분</span>
+              <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-100 gap-3">
+                <span className="text-sm text-gray-700">개인 (1인)</span>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={individual}
+                    onChange={e => setIndividual(formatComma(e.target.value))}
+                    className="w-24 text-right border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-emerald-400"
+                  />
+                  <span className="text-xs text-gray-400">원/분</span>
                 </div>
-              ))}
+              </div>
+              <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-100 gap-3">
+                <span className="text-sm text-gray-700">세미 (2-3인)</span>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={semi}
+                    onChange={e => setSemi(formatComma(e.target.value))}
+                    className="w-24 text-right border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-emerald-400"
+                  />
+                  <span className="text-xs text-gray-400">원/분</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between px-3 py-2.5 gap-3">
+                <span className="text-sm text-gray-700">단체 (4인+)</span>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={group}
+                    onChange={e => setGroup(formatComma(e.target.value))}
+                    className="w-24 text-right border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-emerald-400"
+                  />
+                  <span className="text-xs text-gray-400">원/분</span>
+                </div>
+              </div>
             </div>
             <div className="border border-gray-200 rounded-xl overflow-hidden">
               <div className="bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-500 border-b border-gray-200">안무 단가</div>
-              {(Object.entries(CHOREO_LABELS) as [ChoreoLevel, string][]).map(([key, label]) => (
-                <div key={key} className="flex justify-between px-3 py-3 border-b border-gray-100 last:border-0">
+              {(Object.entries(CHOREO_LABELS) as [ChoreoLevel, string][]).map(([key, label], i, arr) => (
+                <div
+                  key={key}
+                  className={`flex items-center justify-between px-3 py-2.5 gap-3 ${i < arr.length - 1 ? 'border-b border-gray-100' : ''}`}
+                >
                   <span className="text-sm text-gray-700">{label}</span>
-                  <span className="text-sm font-semibold text-gray-800">{formatKRW(prices.choreo[key])}</span>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={choreoPrices[key] ?? ''}
+                      onChange={e => setChoreoPrices(prev => ({ ...prev, [key]: formatComma(e.target.value) }))}
+                      className="w-28 text-right border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-emerald-400"
+                    />
+                    <span className="text-xs text-gray-400">원</span>
+                  </div>
                 </div>
               ))}
             </div>
+            <button
+              onClick={savePrices}
+              className="w-full py-3 rounded-xl bg-emerald-500 text-white text-sm font-semibold"
+            >
+              저장
+            </button>
           </div>
         )}
       </div>

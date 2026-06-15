@@ -2,14 +2,17 @@ import { useState, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { useAppStore } from '../stores/appStore'
-import { formatKRW, toYYYYMM } from '../rules/utils'
-import { Download, ChevronLeft, ChevronRight, Lock } from 'lucide-react'
+import { formatKRW, toYYYYMM, generateId } from '../rules/utils'
+import { getBillableChoreos } from '../rules/choreo'
+import { Download, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Lock, Unlock } from 'lucide-react'
 import html2canvas from 'html2canvas'
+import JSZip from 'jszip'
 
 export default function TeacherPage() {
   const { currentMonth, setCurrentMonth } = useAppStore()
   const [year, month] = currentMonth.split('-').map(Number)
   const [activeTeacherId, setActiveTeacherId] = useState<string>('')
+  const [closeExpanded, setCloseExpanded] = useState(false)
 
   const teachers = useLiveQuery(() => db.teachers.toArray(), []) ?? []
   const closedMonths = useLiveQuery(() => db.monthClose.toArray(), []) ?? []
@@ -18,6 +21,12 @@ export default function TeacherPage() {
   const lessons = useLiveQuery(() =>
     db.lessons.where('date').between(`${currentMonth}-01`, `${currentMonth}-31`, true, true).toArray()
   , [currentMonth]) ?? []
+
+  const allChoreos = useLiveQuery(() => db.choreos.toArray(), []) ?? []
+  const billableChoreos = getBillableChoreos(allChoreos, currentMonth)
+  const lessonTotal = lessons.reduce((sum, l) =>
+    sum + l.students.reduce((s, st) => s + st.fee, 0), 0)
+  const choreoTotal = billableChoreos.reduce((sum, c) => sum + c.totalFee, 0)
 
   const printRef = useRef<HTMLDivElement>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -51,6 +60,95 @@ export default function TeacherPage() {
   function nextMonth() {
     const d = new Date(year, month, 1)
     setCurrentMonth(toYYYYMM(d))
+  }
+
+  // ─── 월 마감 ───────────────────────────────────────────
+  async function handleCloseMonth() {
+    if (isClosed) {
+      if (!confirm('마감을 취소할까요?')) return
+      await db.monthClose.where('month').equals(currentMonth).delete()
+      return
+    }
+    if (!confirm(`${year}년 ${month}월을 마감할까요? 안무 청구가 확정됩니다.`)) return
+    for (const c of billableChoreos) {
+      await db.choreos.update(c.id, { billedMonth: currentMonth })
+    }
+    await db.monthClose.add({
+      id: generateId(),
+      month: currentMonth,
+      closedAt: Date.now(),
+      lessonTotal,
+      choreoTotal,
+      grandTotal: lessonTotal + choreoTotal,
+    })
+  }
+
+  async function renderTeacherCanvas(teacher: typeof teachers[0]) {
+    const tLessons = lessons.filter(l => l.teacherId === teacher.id)
+    if (tLessons.length === 0) return null
+    const div = document.createElement('div')
+    div.style.cssText = 'position:fixed;top:-9999px;left:-9999px;background:white;width:400px;padding:20px;font-family:sans-serif;'
+    div.innerHTML = `
+      <h2 style="font-size:16px;font-weight:bold;margin-bottom:12px;color:#1a1a1a">${teacher.name} · ${year}년 ${month}월</h2>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr style="background:#f9fafb">
+          <th style="padding:8px;text-align:left;border-bottom:1px solid #e5e7eb">날짜</th>
+          <th style="padding:8px;text-align:left;border-bottom:1px solid #e5e7eb">장소</th>
+          <th style="padding:8px;text-align:left;border-bottom:1px solid #e5e7eb">이름</th>
+          <th style="padding:8px;text-align:right;border-bottom:1px solid #e5e7eb">분</th>
+          <th style="padding:8px;text-align:right;border-bottom:1px solid #e5e7eb">금액</th>
+        </tr></thead>
+        <tbody>
+          ${tLessons.sort((a, b) => a.date.localeCompare(b.date)).flatMap(l =>
+            l.students.map((s, i) => `<tr style="border-bottom:1px solid #f3f4f6">
+              <td style="padding:6px 8px;color:#6b7280">${i === 0 ? l.date.slice(5).replace('-', '/') : ''}</td>
+              <td style="padding:6px 8px;color:#6b7280">${i === 0 ? l.location : ''}</td>
+              <td style="padding:6px 8px;font-weight:500">${s.name}${s.unpaid ? ' (미납)' : ''}</td>
+              <td style="padding:6px 8px;text-align:right;color:#6b7280">${s.minutes}분</td>
+              <td style="padding:6px 8px;text-align:right;font-weight:600">${s.fee.toLocaleString()}</td>
+            </tr>`)
+          ).join('')}
+        </tbody>
+      </table>
+    `
+    document.body.appendChild(div)
+    const canvas = await html2canvas(div, { scale: 2, backgroundColor: '#ffffff' })
+    document.body.removeChild(div)
+    return { canvas, name: teacher.name }
+  }
+
+  async function handleBulkDownload() {
+    const results = (await Promise.all(teachers.map(t => renderTeacherCanvas(t)))).filter(Boolean) as { canvas: HTMLCanvasElement; name: string }[]
+    if (results.length === 0) return
+
+    // iOS: Web Share API로 모든 이미지 공유 — canShare 체크 없이 바로 시도
+    if (typeof navigator.share === 'function') {
+      try {
+        const files = await Promise.all(
+          results.map(async ({ canvas, name }) => {
+            const blob = await new Promise<Blob>(res => canvas.toBlob(b => res(b!), 'image/png'))
+            return new File([blob], `${currentMonth}_${name}.png`, { type: 'image/png' })
+          })
+        )
+        await navigator.share({ files, title: `${currentMonth} 레슨비` })
+        return
+      } catch (e) {
+        if ((e as Error).name === 'AbortError') return
+        // share 실패 시 fallback으로 내려감
+      }
+    }
+
+    // 일반 브라우저: ZIP 다운로드
+    const zip = new JSZip()
+    for (const { canvas, name } of results) {
+      const blob = await new Promise<Blob>(res => canvas.toBlob(b => res(b!), 'image/png'))
+      zip.file(`${currentMonth}_${name}.png`, blob)
+    }
+    const content = await zip.generateAsync({ type: 'blob' })
+    const link = document.createElement('a')
+    link.download = `${currentMonth}_레슨비_전체.zip`
+    link.href = URL.createObjectURL(content)
+    link.click()
   }
 
   async function handleDownloadImage() {
@@ -159,23 +257,76 @@ export default function TeacherPage() {
         <button onClick={prevMonth} className="p-1 rounded-full hover:bg-gray-100">
           <ChevronLeft size={20} className="text-gray-600" />
         </button>
-        <div className="flex items-center gap-2">
+        <div className="relative flex items-center gap-2">
           <span className="text-base font-semibold text-gray-800">{year}년 {month}월</span>
           {isClosed && <Lock size={14} className="text-gray-400" />}
+          <input
+            type="month"
+            value={currentMonth}
+            onChange={e => e.target.value && setCurrentMonth(e.target.value)}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          />
         </div>
         <button onClick={nextMonth} className="p-1 rounded-full hover:bg-gray-100">
           <ChevronRight size={20} className="text-gray-600" />
         </button>
       </div>
 
-      {/* 선생님 탭 */}
-      <div className="overflow-x-auto border-b border-gray-100">
-        <div className="flex px-3 py-2 gap-2 min-w-max">
+      {/* 월 마감 */}
+      <div className="border-b border-gray-100">
+        <button
+          onClick={() => setCloseExpanded(v => !v)}
+          className="w-full flex items-center justify-between px-4 py-2.5"
+        >
+          <div className="flex items-center gap-2">
+            {isClosed ? <Lock size={15} className="text-gray-400" /> : <Unlock size={15} className="text-amber-500" />}
+            <span className="text-sm font-medium text-gray-700">{isClosed ? '마감됨' : '정산 예정'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-emerald-600">{formatKRW(lessonTotal + choreoTotal)}</span>
+            {closeExpanded ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+          </div>
+        </button>
+        {closeExpanded && (
+          <div className="px-4 pb-3 space-y-3">
+            <div className="space-y-1 text-xs text-gray-500">
+              <div className="flex justify-between">
+                <span>레슨 합계</span>
+                <span className="font-medium">{formatKRW(lessonTotal)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>안무 합계 ({billableChoreos.length}건)</span>
+                <span className="font-medium">{formatKRW(choreoTotal)}</span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleCloseMonth}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold ${
+                  isClosed ? 'bg-gray-200 text-gray-600' : 'bg-emerald-500 text-white'
+                }`}
+              >
+                {isClosed ? '마감 취소' : `${month}월 마감 확정`}
+              </button>
+              <button
+                onClick={handleBulkDownload}
+                className="flex-1 flex items-center justify-center gap-1.5 bg-gray-800 text-white rounded-xl text-sm font-medium"
+              >
+                <Download size={14} />
+                전체 ZIP
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 선생님 목록 */}
+      <div className="flex flex-wrap gap-2 px-3 py-2 border-b border-gray-100">
           {teachers.map(t => (
             <button
               key={t.id}
               onClick={() => setActiveTeacherId(t.id)}
-              className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${
                 (activeTeacherId === t.id || (!activeTeacherId && teachers[0]?.id === t.id))
                   ? 'text-white'
                   : 'bg-gray-100 text-gray-600'
@@ -187,7 +338,6 @@ export default function TeacherPage() {
               {t.name}
             </button>
           ))}
-        </div>
       </div>
 
       {/* 내역 */}

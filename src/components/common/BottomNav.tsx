@@ -1,4 +1,4 @@
-import { Calendar, BarChart2, Users, Music, Settings } from 'lucide-react'
+import { Calendar, BarChart2, Receipt, Music, Users } from 'lucide-react'
 
 interface BottomNavProps {
   active: string
@@ -8,9 +8,9 @@ interface BottomNavProps {
 const TABS = [
   { id: 'calendar', icon: Calendar, label: '캘린더' },
   { id: 'stats', icon: BarChart2, label: '통계' },
-  { id: 'teacher', icon: Users, label: '내역' },
+  { id: 'teacher', icon: Receipt, label: '내역' },
   { id: 'choreo', icon: Music, label: '안무' },
-  { id: 'settings', icon: Settings, label: '설정' },
+  { id: 'settings', icon: Users, label: '회원관리' },
 ]
 
 export default function BottomNav({ active, onChange }: BottomNavProps) {

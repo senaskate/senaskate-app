@@ -97,6 +97,7 @@ export interface PriceConfig {
   semi: number          // 원/분  기본 1800
   group: number         // 원/분  기본 2500
   choreo: Record<ChoreoLevel, number>
+  locations?: string[]  // 관리 가능한 위치 목록
 }
 
 // ─── 장소 목록 ────────────────────────────────────────────
@@ -119,6 +120,7 @@ export const DEFAULT_PRICES: PriceConfig = {
   individual: 1400,
   semi: 1800,
   group: 2500,
+  locations: [...LOCATIONS],
   choreo: {
     basic_novice_fs: 1000000,
     advanced_novice_sp: 1100000,
